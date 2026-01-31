@@ -1,5 +1,3 @@
-using System.Data.Common;
-
 namespace Lox;
 
 public class Scanner
