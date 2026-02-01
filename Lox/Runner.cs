@@ -1,3 +1,5 @@
+using Lox.CodeRepresentation.Visitors;
+
 namespace Lox;
 
 public static class Runner
@@ -6,8 +8,10 @@ public static class Runner
     {
         var scanner = new Scanner(source);
         var tokens = scanner.ScanTokens();
-        
-        foreach (var token in tokens)
-            Console.WriteLine(token);
+
+        var parser = new Parser(tokens.ToList());
+        var expression = parser.Parse();
+
+        Console.WriteLine(new AstPrinter().Print(expression));
     }
 }
