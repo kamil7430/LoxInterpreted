@@ -2,6 +2,19 @@
 
 namespace Lox;
 
+/*
+expression     → comma ;
+comma          → equality ( "," equality )* ;
+equality       → comparison ( ( "!=" | "==" ) comparison )* ;
+comparison     → term ( ( ">" | ">=" | "<" | "<=" ) term )* ;
+term           → factor ( ( "-" | "+" ) factor )* ;
+factor         → unary ( ( "/" | "*" ) unary )* ;
+unary          → ( "!" | "-" ) unary
+               | primary ;
+primary        → NUMBER | STRING | "true" | "false" | "nil"
+               | "(" expression ")" ;
+*/
+
 public class Parser
 {
     private class ParseErrorException : Exception {}
@@ -26,10 +39,19 @@ public class Parser
         }
     }
     
-    // expression → equality ;
+    // expression → comma ;
     private Expr Expression()
-        => Equality();
+        => Comma();
 
+    // comma → equality ( "," equality )* ;
+    private Expr Comma()
+    {
+        var expr = Equality();
+        while (Match(TokenType.Comma))
+            expr = new Binary(expr, Previous(), Equality());
+        return expr;
+    }
+    
     // equality → comparison ( ( "!=" | "==" ) comparison )* ;
     private Expr Equality()
     {
