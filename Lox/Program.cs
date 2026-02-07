@@ -58,7 +58,7 @@ public class Program
 
     private static void Report(int line, string where, string message)
     {
-        Console.Write("[Line " + line + "] Error" + where + ": " + message);
+        Console.WriteLine("[Line " + line + "] Error" + where + ": " + message);
         _hadError = true;
     }
 }

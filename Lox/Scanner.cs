@@ -196,9 +196,12 @@ public class Scanner
                 _line++;
             Advance();
         }
-        
+
         if (IsAtEnd())
+        {
             Program.Error(_line, "Unterminated string.");
+            return;
+        }
 
         Advance();
         AddToken(TokenType.String, _source.Substr(_start + 1, _current - 1));

@@ -11,10 +11,10 @@ public class AstPrinter : IVisitor<string>
     {
         var builder = new StringBuilder();
 
-        builder.Append("(").Append(name);
+        builder.Append('(').Append(name);
         foreach (var expr in exprs)
-            builder.Append(" ").Append(expr.Accept(this));
-        builder.Append(")");
+            builder.Append(' ').Append(expr.Accept(this));
+        builder.Append(')');
 
         return builder.ToString();
     }
