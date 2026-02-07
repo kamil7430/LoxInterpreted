@@ -83,6 +83,12 @@ public class Scanner
             case '*':
                 AddToken(TokenType.Star);
                 break;
+            case '?':
+                AddToken(TokenType.QuestionMark);
+                break;
+            case ':':
+                AddToken(TokenType.Colon);
+                break;
             
             case '!':
                 AddToken(Match('=') ? TokenType.BangEqual : TokenType.Bang);

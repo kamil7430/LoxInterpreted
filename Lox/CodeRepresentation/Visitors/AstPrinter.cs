@@ -30,4 +30,7 @@ public class AstPrinter : IVisitor<string>
 
     public string Visit(Unary unary)
         => Parenthesize(unary.Operator.Lexeme, unary.Right);
+
+    public string Visit(Ternary ternary)
+        => Parenthesize("?:", ternary.Condition, ternary.IfTrue, ternary.IfFalse);
 }

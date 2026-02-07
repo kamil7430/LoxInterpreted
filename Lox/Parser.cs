@@ -3,7 +3,8 @@
 namespace Lox;
 
 /*
-expression     → comma ;
+expression     → conditional ;
+conditional    → comma ( "?" comma ":" comma )* ;
 comma          → equality ( "," equality )* ;
 equality       → comparison ( ( "!=" | "==" ) comparison )* ;
 comparison     → term ( ( ">" | ">=" | "<" | "<=" ) term )* ;
@@ -39,9 +40,35 @@ public class Parser
         }
     }
     
-    // expression → comma ;
+    // expression → conditional ;
     private Expr Expression()
-        => Comma();
+        => Conditional();
+
+    // conditional → comma ( "?" comma ":" comma )* ;
+    private Expr Conditional()
+    {
+        Stack<Expr> exprs = [];
+        exprs.Push(Comma());
+        
+        while (Match(TokenType.QuestionMark))
+        {
+            exprs.Push(Comma());
+            if (Match(TokenType.Colon))
+                exprs.Push(Comma());
+            else
+                throw Error(Peek(), "Expected ':' in conditional expression.");
+        }
+        
+        var expr = exprs.Pop();
+        while (exprs.Count > 0)
+        {
+            var ifTrue = exprs.Pop();
+            var condition = exprs.Pop();
+            expr = new Ternary(condition, ifTrue, expr);
+        }
+
+        return expr;
+    }
 
     // comma → equality ( "," equality )* ;
     private Expr Comma()
