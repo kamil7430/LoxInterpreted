@@ -2,6 +2,33 @@
 
 public class Interpreter : IVisitor<object?>
 {
+    public void Interpret(Expr expr)
+    {
+        try
+        {
+            var result = Evaluate(expr);
+            Console.WriteLine(Stringify(result));
+        }
+        catch (RuntimeErrorException e)
+        {
+            Program.RuntimeError(e);
+        }
+    }
+
+    private string Stringify(object? obj)
+    {
+        switch (obj)
+        {
+            case null:
+                return "nil";
+            case double:
+                var text = obj.ToString();
+                return text.EndsWith(".0") ? text.Substr(0, text.Length - 2) : text;
+            default:
+                return obj.ToString();
+        }
+    }
+
     public object? Visit(Binary binary)
     {
         var left = Evaluate(binary.Left);
@@ -10,32 +37,52 @@ public class Interpreter : IVisitor<object?>
         switch (binary.Operator.Type)
         {
             case TokenType.Minus:
-                return (double)left - (double)right;
+                CheckNumberOperands(binary.Operator, left, right);
+                return (double)left! - (double)right!;
             case TokenType.Plus:
-                if (left is double ld && right is double rd)
-                    return ld + rd;
-                if (left is string ls && right is string rs)
-                    return ls + rs;
-                break;
+                if (left is double ld)
+                {
+                    if (right is double rd)
+                        return ld + rd;
+                    if (right is string rs)
+                        return Stringify(ld) + rs;
+                }
+                if (left is string ls)
+                {
+                    if (right is double rd)
+                        return ls + Stringify(rd);
+                    if (right is string rs)
+                        return ls + rs;
+                }
+                throw new RuntimeErrorException(binary.Operator, "Operands must be two numbers, two strings or combination of those!");
             case TokenType.Slash:
-                return (double)left / (double)right;
+                CheckNumberOperands(binary.Operator, left, right);
+                if ((double)right! == 0)
+                    throw new RuntimeErrorException(binary.Operator, "Cannot divide by zero!");
+                return (double)left! / (double)right!;
             case TokenType.Star:
-                return (double)left * (double)right;
+                CheckNumberOperands(binary.Operator, left, right);
+                return (double)left! * (double)right!;
             
             case TokenType.Greater:
-                return (double)left > (double)right;
+                CheckNumberOperands(binary.Operator, left, right);
+                return (double)left! > (double)right!;
             case TokenType.GreaterEqual:
-                return (double)left >= (double)right;
+                CheckNumberOperands(binary.Operator, left, right);
+                return (double)left! >= (double)right!;
             case TokenType.Less:
-                return (double)left < (double)right;
+                CheckNumberOperands(binary.Operator, left, right);
+                return (double)left! < (double)right!;
             case TokenType.LessEqual:
-                return (double)left <= (double)right;
+                CheckNumberOperands(binary.Operator, left, right);
+                return (double)left! <= (double)right!;
             
             case TokenType.BangEqual:
                 return !IsEqual(left, right);
-            case TokenType.Equal:
+            case TokenType.EqualEqual:
                 return IsEqual(left, right);
         }
+        
         throw new NotSupportedException();
     }
 
@@ -48,16 +95,23 @@ public class Interpreter : IVisitor<object?>
     public object? Visit(Unary unary)
     {
         var right = Evaluate(unary.Right);
-        return unary.Operator.Type switch
+        switch (unary.Operator.Type)
         {
-            TokenType.Minus => -(double)right,
-            TokenType.Bang => !IsTruthy(right),
-            _ => throw new NotSupportedException(),
-        };
+            case TokenType.Minus:
+                CheckNumberOperand(unary.Operator, right);
+                return -(double)right!;
+            case TokenType.Bang:
+                return !IsTruthy(right);
+            default:
+                throw new NotSupportedException();
+        }
     }
 
     public object? Visit(Ternary ternary)
-        => (bool)Evaluate(ternary.Condition) ? Evaluate(ternary.IfTrue) : Evaluate(ternary.IfFalse);
+    {
+        var condition = IsTruthy(Evaluate(ternary.Condition));
+        return condition ? Evaluate(ternary.IfTrue) : Evaluate(ternary.IfFalse);
+    }
 
     private object? Evaluate(Expr expr)
         => expr.Accept(this);
@@ -72,4 +126,18 @@ public class Interpreter : IVisitor<object?>
     
     private bool IsEqual(object? left, object? right)
         => left is null ? right is null : left.Equals(right);
+
+    private void CheckNumberOperand(Token @operator, object? operand)
+    {
+        if (operand is not double) 
+            throw new RuntimeErrorException(@operator, "Operand must be a number!");
+    }
+
+    private void CheckNumberOperands(Token @operator, object? left, object? right)
+    {
+        if (left is not double)
+            throw new RuntimeErrorException(@operator, "Left operand must be a number!");
+        if (right is not double)
+            throw new RuntimeErrorException(@operator, "Right operand must be a number!");
+    }
 }

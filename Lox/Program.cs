@@ -1,10 +1,13 @@
 ﻿using System.Globalization;
+using Lox.CodeRepresentation.Visitors;
 
 namespace Lox;
 
 public class Program
 {
     private static bool _hadError = false;
+    private static bool _hadRuntimeError = false;
+    private static Interpreter _interpreter = new();
     
     private static async Task Main(string[] args)
     {
@@ -25,9 +28,11 @@ public class Program
     {
         using var reader = new StreamReader(path);
         var script = await reader.ReadToEndAsync();
-        Runner.Run(script);
+        Run(script);
         if (_hadError)
             Environment.Exit(65);
+        if (_hadRuntimeError)
+            Environment.Exit(70);
     }
 
     private static void RunPrompt()
@@ -38,9 +43,23 @@ public class Program
             var line = Console.ReadLine();
             if (string.IsNullOrEmpty(line))
                 break;
-            Runner.Run(line);
+            Run(line);
             _hadError = false;  
         }
+    }
+    
+    private static void Run(string source)
+    {
+        var scanner = new Scanner(source);
+        var tokens = scanner.ScanTokens();
+
+        var parser = new Parser(tokens.ToList());
+        var expression = parser.Parse();
+
+        if (_hadError)
+            return;
+
+        _interpreter.Interpret(expression!);
     }
 
     public static void Error(int line, string message)
@@ -54,6 +73,12 @@ public class Program
             Report(token.Line, " at end", message);
         else 
             Report(token.Line, " at '" + token.Lexeme + "'", message);
+    }
+
+    public static void RuntimeError(RuntimeErrorException e)
+    {
+        Console.WriteLine(e.Message + "\n[line " + e.Token.Line + ']');
+        _hadRuntimeError = true;
     }
 
     private static void Report(int line, string where, string message)
