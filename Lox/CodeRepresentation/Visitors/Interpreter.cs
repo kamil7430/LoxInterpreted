@@ -35,10 +35,8 @@ public class Interpreter : IVisitor<object?>
                 return !IsEqual(left, right);
             case TokenType.Equal:
                 return IsEqual(left, right);
-            
-            default:
-                throw new NotSupportedException();
         }
+        throw new NotSupportedException();
     }
 
     public object? Visit(Grouping grouping)
