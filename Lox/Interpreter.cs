@@ -1,6 +1,9 @@
-﻿namespace Lox.Expressions.Visitors;
+﻿using Lox.Expressions;
+using Lox.Statements;
 
-public class Interpreter : IVisitor<object?>
+namespace Lox;
+
+public class Interpreter : Expressions.IVisitor<object?>, Statements.IVisitor<None?>
 {
     public void Interpret(Expr expr)
     {
@@ -111,6 +114,19 @@ public class Interpreter : IVisitor<object?>
     {
         var condition = IsTruthy(Evaluate(ternary.Condition));
         return condition ? Evaluate(ternary.IfTrue) : Evaluate(ternary.IfFalse);
+    }
+
+    public None? Visit(Expression expression)
+    {
+        Evaluate(expression.Expr);
+        return null;
+    }
+
+    public None? Visit(Print print)
+    {
+        var value = Evaluate(print.Expression);
+        Console.WriteLine(Stringify(value));
+        return null;
     }
 
     private object? Evaluate(Expr expr)

@@ -1,6 +1,4 @@
-﻿using Lox.Expressions.Visitors;
-
-namespace Lox.Expressions;
+﻿namespace Lox.Expressions;
 
 public class Ternary : Expr
 {

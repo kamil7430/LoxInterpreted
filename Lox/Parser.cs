@@ -1,8 +1,14 @@
 ﻿using Lox.Expressions;
+using Lox.Statements;
 
 namespace Lox;
 
 /*
+program        → statement* EOF ;
+statement      → exprStmt | printStmt ;
+exprStmt       → expression ";" ;
+printStmt      → "print" expression ";" ;
+ 
 expression     → conditional ;
 conditional    → comma ( "?" comma ":" comma )* ;
 comma          → equality ( "," equality )* ;
@@ -28,18 +34,39 @@ public class Parser
         _tokens = tokens;
     }
 
-    public Expr? Parse()
+    // program → statement* EOF ;
+    public List<Stmt> Parse()
     {
-        try
-        {
-            return Expression();
-        }
-        catch (ParseErrorException e)
-        {
-            return null;
-        }
+        List<Stmt> statements = [];
+        while (!IsAtEnd())
+            statements.Add(Statement());
+        return statements;
     }
     
+    // statement → exprStmt | printStmt ;
+    private Stmt Statement()
+    {
+        if (Match(TokenType.Print))
+            return PrintStatement();
+        return ExpressionStatement();
+    }
+
+    // exprStmt → expression ";" ;
+    private Stmt ExpressionStatement()
+    {
+        var expr = Expression();
+        Consume(TokenType.Semicolon, "Expected ';' after expression!");
+        return new Expression(expr);
+    }
+
+    // printStmt → "print" expression ";" ;
+    private Stmt PrintStatement()
+    {
+        var value = Expression();
+        Consume(TokenType.Semicolon, "Expected ';' after value!");
+        return new Print(value);
+    }
+
     // expression → conditional ;
     private Expr Expression()
         => Conditional();

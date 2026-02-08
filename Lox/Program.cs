@@ -1,5 +1,4 @@
 ﻿using System.Globalization;
-using Lox.Expressions.Visitors;
 
 namespace Lox;
 

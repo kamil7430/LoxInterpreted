@@ -1,4 +1,4 @@
-namespace Lox.Expressions.Visitors;
+namespace Lox.Expressions;
 
 public interface IVisitor<out T>
 {

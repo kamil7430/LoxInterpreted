@@ -1,5 +1,3 @@
-using Lox.Expressions.Visitors;
-
 namespace Lox.Expressions;
 
 public class Unary : Expr
