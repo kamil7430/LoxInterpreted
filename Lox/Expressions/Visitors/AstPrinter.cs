@@ -1,6 +1,6 @@
 using System.Text;
 
-namespace Lox.CodeRepresentation.Visitors;
+namespace Lox.Expressions.Visitors;
 
 public class AstPrinter : IVisitor<string>
 {

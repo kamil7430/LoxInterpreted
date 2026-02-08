@@ -1,5 +1,5 @@
 ﻿using System.Globalization;
-using Lox.CodeRepresentation.Visitors;
+using Lox.Expressions.Visitors;
 
 namespace Lox;
 
@@ -7,7 +7,7 @@ public class Program
 {
     private static bool _hadError = false;
     private static bool _hadRuntimeError = false;
-    private static Interpreter _interpreter = new();
+    private static readonly Interpreter _interpreter = new();
     
     private static async Task Main(string[] args)
     {

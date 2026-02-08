@@ -1,4 +1,4 @@
-﻿namespace Lox.CodeRepresentation.Visitors;
+﻿namespace Lox.Expressions.Visitors;
 
 public class Interpreter : IVisitor<object?>
 {

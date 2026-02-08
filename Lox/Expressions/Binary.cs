@@ -1,6 +1,6 @@
-using Lox.CodeRepresentation.Visitors;
+using Lox.Expressions.Visitors;
 
-namespace Lox.CodeRepresentation;
+namespace Lox.Expressions;
 
 public class Binary : Expr
 {
