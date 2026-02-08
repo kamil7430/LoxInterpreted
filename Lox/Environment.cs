@@ -2,6 +2,8 @@ namespace Lox;
 
 public class Environment
 {
+    public class NotInitialized {}
+    
     private readonly Environment? _enclosing;
     private readonly Dictionary<string, object?> _values = [];
 
@@ -16,7 +18,11 @@ public class Environment
     public object? Get(Token name)
     {
         if (_values.TryGetValue(name.Lexeme, out var value))
+        {
+            if (value is NotInitialized)
+                throw new RuntimeErrorException(name, $"Access to uninitialized variable {name.Lexeme}!");
             return value;
+        }
 
         if (_enclosing != null)
             return _enclosing.Get(name);

@@ -150,7 +150,7 @@ public class Interpreter : Expressions.IVisitor<object?>, Statements.IVisitor<No
 
     public None? Visit(Var var)
     {
-        object? value = null;
+        object? value = new Environment.NotInitialized();
         if (var.Initializer != null)
             value = Evaluate(var.Initializer);
         
