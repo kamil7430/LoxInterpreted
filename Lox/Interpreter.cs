@@ -5,6 +5,8 @@ namespace Lox;
 
 public class Interpreter : Expressions.IVisitor<object?>, Statements.IVisitor<None?>
 {
+    private Environment _environment = new();
+    
     public void Interpret(IEnumerable<Stmt> statements)
     {
         try
@@ -119,6 +121,9 @@ public class Interpreter : Expressions.IVisitor<object?>, Statements.IVisitor<No
         return condition ? Evaluate(ternary.IfTrue) : Evaluate(ternary.IfFalse);
     }
 
+    public object? Visit(Variable variable)
+        => _environment.Get(variable.Name);
+
     public None? Visit(Expression expression)
     {
         Evaluate(expression.Expr);
@@ -129,6 +134,16 @@ public class Interpreter : Expressions.IVisitor<object?>, Statements.IVisitor<No
     {
         var value = Evaluate(print.Expression);
         Console.WriteLine(Stringify(value));
+        return null;
+    }
+
+    public None? Visit(Var var)
+    {
+        object? value = null;
+        if (var.Initializer != null)
+            value = Evaluate(var.Initializer);
+        
+        _environment.Define(var.Name.Lexeme, value);
         return null;
     }
 

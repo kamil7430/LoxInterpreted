@@ -7,4 +7,5 @@ public interface IVisitor<out T>
     T Visit(Literal literal);
     T Visit(Unary unary);
     T Visit(Ternary ternary);
+    T Visit(Variable variable);
 }

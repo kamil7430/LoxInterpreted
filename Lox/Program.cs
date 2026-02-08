@@ -15,7 +15,7 @@ public class Program
         if (args.Length > 1)
         {
             Console.Error.WriteLine("Too many arguments!\nUsage: Lox [script-file]");
-            Environment.Exit(64);
+            System.Environment.Exit(64);
         }
         else if (args.Length == 1)
             await RunFile(args[0]);
@@ -29,9 +29,9 @@ public class Program
         var script = await reader.ReadToEndAsync();
         Run(script);
         if (_hadError)
-            Environment.Exit(65);
+            System.Environment.Exit(65);
         if (_hadRuntimeError)
-            Environment.Exit(70);
+            System.Environment.Exit(70);
     }
 
     private static void RunPrompt()

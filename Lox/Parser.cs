@@ -4,8 +4,11 @@ using Lox.Statements;
 namespace Lox;
 
 /*
-program        → statement* EOF ;
+program        → declaration* EOF ;
+declaration    → varDecl | statement ;
 statement      → exprStmt | printStmt ;
+
+varDecl        → "var" IDENTIFIER ( "=" expression )? ";" ;
 exprStmt       → expression ";" ;
 printStmt      → "print" expression ";" ;
  
@@ -19,7 +22,7 @@ factor         → unary ( ( "/" | "*" ) unary )* ;
 unary          → ( "!" | "-" ) unary
                | primary ;
 primary        → NUMBER | STRING | "true" | "false" | "nil"
-               | "(" expression ")" ;
+               | "(" expression ")" | IDENTIFIER ;
 */
 
 public class Parser
@@ -34,15 +37,45 @@ public class Parser
         _tokens = tokens;
     }
 
-    // program → statement* EOF ;
+    // program → declaration* EOF ;
     public List<Stmt> Parse()
     {
         List<Stmt> statements = [];
         while (!IsAtEnd())
-            statements.Add(Statement());
+            statements.Add(Declaration());
         return statements;
     }
-    
+
+    // declaration → varDecl | statement ;
+    private Stmt Declaration()
+    {
+        try
+        {
+            if (Match(TokenType.Var))
+                return VarDeclaration();
+
+            return Statement();
+        }
+        catch (ParseErrorException e)
+        {
+            Synchronize();
+            return null;
+        }
+    }
+
+    // varDecl → "var" IDENTIFIER ( "=" expression )? ";" ;
+    private Stmt VarDeclaration()
+    {
+        var name = Consume(TokenType.Identifier, "Expected variable name.");
+
+        Expr? initializer = null;
+        if (Match(TokenType.Equal))
+            initializer = Expression();
+
+        Consume(TokenType.Semicolon, "Expected ';' after variable declaration.");
+        return new Var(name, initializer);
+    }
+
     // statement → exprStmt | printStmt ;
     private Stmt Statement()
     {
@@ -150,7 +183,7 @@ public class Parser
         return new Unary(Previous(), Unary());
     }
     
-    // primary → NUMBER | STRING | "true" | "false" | "nil" | "(" expression ")" ;
+    // primary → NUMBER | STRING | "true" | "false" | "nil" | "(" expression ")" | IDENTIFIER ;
     private Expr Primary()
     {
         if (Match(TokenType.True))
@@ -167,6 +200,8 @@ public class Parser
             Consume(TokenType.RightParen, "Expected ')' after expression!");
             return new Grouping(expr);
         }
+        if (Match(TokenType.Identifier))
+            return new Variable(Previous());
 
         throw Error(Peek(), "Expected expression.");
     }
