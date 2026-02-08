@@ -124,6 +124,13 @@ public class Interpreter : Expressions.IVisitor<object?>, Statements.IVisitor<No
     public object? Visit(Variable variable)
         => _environment.Get(variable.Name);
 
+    public object? Visit(Assign assign)
+    {
+        var value = Evaluate(assign.Value);
+        _environment.Assign(assign.Name, value);
+        return value;
+    }
+
     public None? Visit(Expression expression)
     {
         Evaluate(expression.Expr);

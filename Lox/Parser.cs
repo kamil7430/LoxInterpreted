@@ -12,7 +12,8 @@ varDecl        → "var" IDENTIFIER ( "=" expression )? ";" ;
 exprStmt       → expression ";" ;
 printStmt      → "print" expression ";" ;
  
-expression     → conditional ;
+expression     → assignment ;
+assignment     → IDENTIFIER "=" assignment | conditional ;
 conditional    → comma ( "?" comma ":" comma )* ;
 comma          → equality ( "," equality )* ;
 equality       → comparison ( ( "!=" | "==" ) comparison )* ;
@@ -100,9 +101,27 @@ public class Parser
         return new Print(value);
     }
 
-    // expression → conditional ;
+    // expression → assignment ;
     private Expr Expression()
-        => Conditional();
+        => Assignment();
+    
+    // assignment → IDENTIFIER "=" assignment | conditional ;
+    private Expr Assignment()
+    {
+        var expr = Conditional();
+
+        if (Match(TokenType.Equal))
+        {
+            var equals = Previous();
+            var value = Assignment();
+            if (expr is Variable varExpr)
+                return new Assign(varExpr.Name, value);
+
+            Error(equals, "Invalid assignment target.");
+        }
+
+        return expr;
+    }
 
     // conditional → comma ( "?" comma ":" comma )* ;
     private Expr Conditional()
