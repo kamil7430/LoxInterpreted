@@ -6,11 +6,12 @@ namespace Lox;
 /*
 program        → declaration* EOF ;
 declaration    → varDecl | statement ;
-statement      → exprStmt | printStmt ;
+statement      → exprStmt | printStmt | block ;
 
 varDecl        → "var" IDENTIFIER ( "=" expression )? ";" ;
 exprStmt       → expression ";" ;
 printStmt      → "print" expression ";" ;
+block          → "{" declaration "}" ;
  
 expression     → assignment ;
 assignment     → IDENTIFIER "=" assignment | conditional ;
@@ -77,11 +78,13 @@ public class Parser
         return new Var(name, initializer);
     }
 
-    // statement → exprStmt | printStmt ;
+    // statement → exprStmt | printStmt | block ;
     private Stmt Statement()
     {
         if (Match(TokenType.Print))
             return PrintStatement();
+        if (Match(TokenType.LeftBrace))
+            return new Block(Block());
         return ExpressionStatement();
     }
 
@@ -99,6 +102,16 @@ public class Parser
         var value = Expression();
         Consume(TokenType.Semicolon, "Expected ';' after value!");
         return new Print(value);
+    }
+    
+    // block → "{" declaration "}" ;
+    private List<Stmt> Block()
+    {
+        List<Stmt> statements = [];
+        while (!Check(TokenType.RightBrace) && !IsAtEnd())
+            statements.Add(Declaration());
+        Consume(TokenType.RightBrace, "Expected '}' after block.");
+        return statements;
     }
 
     // expression → assignment ;

@@ -2,7 +2,13 @@ namespace Lox;
 
 public class Environment
 {
-    private Dictionary<string, object?> _values = [];
+    private readonly Environment? _enclosing;
+    private readonly Dictionary<string, object?> _values = [];
+
+    public Environment(Environment? enclosing = null)
+    {
+        _enclosing = enclosing;
+    }
 
     public void Define(string name, object? value)
         => _values[name] = value;
@@ -12,6 +18,9 @@ public class Environment
         if (_values.TryGetValue(name.Lexeme, out var value))
             return value;
 
+        if (_enclosing != null)
+            return _enclosing.Get(name);
+
         throw new RuntimeErrorException(name, $"Undefined variable {name.Lexeme}.");
     }
 
@@ -19,6 +28,12 @@ public class Environment
     {
         if (!_values.ContainsKey(name.Lexeme))
             throw new RuntimeErrorException(name, $"Undefined variable {name.Lexeme}.");
+
+        if (_enclosing != null)
+        {
+            _enclosing.Assign(name, value);
+            return;
+        }
         
         _values[name.Lexeme] = value;
     }

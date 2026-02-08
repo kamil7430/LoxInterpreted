@@ -154,6 +154,27 @@ public class Interpreter : Expressions.IVisitor<object?>, Statements.IVisitor<No
         return null;
     }
 
+    public None? Visit(Block block)
+    {
+        ExecuteBlock(block.Statements, new Environment(_environment));
+        return null;
+    }
+
+    private void ExecuteBlock(List<Stmt> statements, Environment environment)
+    {
+        var previous = _environment;
+        try
+        {
+            _environment = environment;
+            foreach (var stmt in statements)
+                Execute(stmt);
+        }
+        finally
+        {
+            _environment = previous;
+        }
+    }
+
     private object? Evaluate(Expr expr)
         => expr.Accept(this);
 
