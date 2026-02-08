@@ -7,6 +7,8 @@ public class Interpreter : Expressions.IVisitor<object?>, Statements.IVisitor<No
 {
     private Environment _environment = new();
     
+    public bool ShouldPrintEvaluatedExpressions { get; set; } = false;
+    
     public void Interpret(IEnumerable<Stmt> statements)
     {
         try
@@ -133,7 +135,9 @@ public class Interpreter : Expressions.IVisitor<object?>, Statements.IVisitor<No
 
     public None? Visit(Expression expression)
     {
-        Evaluate(expression.Expr);
+        var value = Evaluate(expression.Expr);
+        if (ShouldPrintEvaluatedExpressions)
+            Console.WriteLine(Stringify(value));
         return null;
     }
 

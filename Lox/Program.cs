@@ -36,6 +36,7 @@ public class Program
 
     private static void RunPrompt()
     {
+        _interpreter.ShouldPrintEvaluatedExpressions = true;
         while (true)
         {
             Console.Write("> ");
