@@ -5,18 +5,21 @@ namespace Lox;
 
 public class Interpreter : Expressions.IVisitor<object?>, Statements.IVisitor<None?>
 {
-    public void Interpret(Expr expr)
+    public void Interpret(IEnumerable<Stmt> statements)
     {
         try
         {
-            var result = Evaluate(expr);
-            Console.WriteLine(Stringify(result));
+            foreach (var stmt in statements)
+                Execute(stmt);
         }
         catch (RuntimeErrorException e)
         {
             Program.RuntimeError(e);
         }
     }
+
+    private void Execute(Stmt stmt)
+        => stmt.Accept(this);
 
     private string Stringify(object? obj)
     {
