@@ -9,4 +9,5 @@ public interface IVisitor<out T>
     T Visit(Ternary ternary);
     T Visit(Variable variable);
     T Visit(Assign assign);
+    T Visit(Logical logical);
 }

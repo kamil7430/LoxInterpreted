@@ -91,6 +91,9 @@ public class Interpreter : Expressions.IVisitor<object?>, Statements.IVisitor<No
                 return !IsEqual(left, right);
             case TokenType.EqualEqual:
                 return IsEqual(left, right);
+            
+            case TokenType.Comma:
+                return right;
         }
         
         throw new NotSupportedException();
@@ -131,6 +134,25 @@ public class Interpreter : Expressions.IVisitor<object?>, Statements.IVisitor<No
         var value = Evaluate(assign.Value);
         _environment.Assign(assign.Name, value);
         return value;
+    }
+
+    public object? Visit(Logical logical)
+    {
+        var left = Evaluate(logical.Left);
+
+        switch (logical.Operator.Type)
+        {
+            case TokenType.Or:
+                if (IsTruthy(left))
+                    return left;
+                break;
+            case TokenType.And:
+                if (!IsTruthy(left))
+                    return left;
+                break;
+        }
+
+        return Evaluate(logical.Right);
     }
 
     public None? Visit(Expression expression)

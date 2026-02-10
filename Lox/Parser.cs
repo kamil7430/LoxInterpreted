@@ -17,7 +17,9 @@ block          → "{" declaration "}" ;
 expression     → assignment ;
 assignment     → IDENTIFIER "=" assignment | conditional ;
 conditional    → comma ( "?" comma ":" comma )* ;
-comma          → equality ( "," equality )* ;
+comma          → logic_or ( "," logic_or )* ;
+logic_or       → logic_and ( "or" logic_and )* ;
+logic_and      → equality ( "and" equality )* ;
 equality       → comparison ( ( "!=" | "==" ) comparison )* ;
 comparison     → term ( ( ">" | ">=" | "<" | "<=" ) term )* ;
 term           → factor ( ( "-" | "+" ) factor )* ;
@@ -180,15 +182,33 @@ public class Parser
         return expr;
     }
 
-    // comma → equality ( "," equality )* ;
+    // comma → logic_or ( "," logic_or )* ;
     private Expr Comma()
     {
-        var expr = Equality();
+        var expr = LogicOr();
         while (Match(TokenType.Comma))
-            expr = new Binary(expr, Previous(), Equality());
+            expr = new Binary(expr, Previous(), LogicOr());
         return expr;
     }
-    
+
+    // logic_or → logic_and ( "or" logic_and )* ;
+    private Expr LogicOr()
+    {
+        var expr = LogicAnd();
+        while (Match(TokenType.Or))
+            expr = new Logical(expr, Previous(), LogicAnd());
+        return expr;
+    }
+
+    // logic_and → equality ( "and" equality )* ;
+    private Expr LogicAnd()
+    {
+        var expr = Equality();
+        while (Match(TokenType.And))
+            expr = new Logical(expr, Previous(), Equality());
+        return expr;
+    }
+
     // equality → comparison ( ( "!=" | "==" ) comparison )* ;
     private Expr Equality()
     {
