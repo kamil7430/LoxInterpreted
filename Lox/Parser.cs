@@ -29,9 +29,12 @@ equality       → comparison ( ( "!=" | "==" ) comparison )* ;
 comparison     → term ( ( ">" | ">=" | "<" | "<=" ) term )* ;
 term           → factor ( ( "-" | "+" ) factor )* ;
 factor         → unary ( ( "/" | "*" ) unary )* ;
-unary          → ( "!" | "-" ) unary | primary ;
+unary          → ( "!" | "-" ) unary | call ;
+call           → primary ( "(" arguments? ")" )* ;
 primary        → NUMBER | STRING | "true" | "false" | "nil"
                | "(" expression ")" | IDENTIFIER ;
+
+arguments      → expression ( "," expression )* ;
 */
 
 public class Parser
@@ -322,14 +325,28 @@ public class Parser
         return expr;
     }
 
-    // unary → ( "!" | "-" ) unary | primary ;
+    // unary → ( "!" | "-" ) unary | call ;
     private Expr Unary()
     {
         if (!Match(TokenType.Bang, TokenType.Minus))
-            return Primary();
+            return Call();
         return new Unary(Previous(), Unary());
     }
-    
+
+    // call → primary ( "(" arguments? ")" )* ;
+    private Expr Call()
+    {
+        var expr = Primary();
+        while (true)
+        {
+            if (Match(TokenType.LeftParen))
+                expr = FinishCall(expr);
+            else 
+                break;
+        }
+        return expr;
+    }
+
     // primary → NUMBER | STRING | "true" | "false" | "nil" | "(" expression ")" | IDENTIFIER ;
     private Expr Primary()
     {
@@ -351,6 +368,22 @@ public class Parser
             return new Variable(Previous());
 
         throw Error(Peek(), "Expected expression.");
+    }
+
+    private Expr FinishCall(Expr callee)
+    {
+        List<Expr> arguments = [];
+        if (!Check(TokenType.RightParen))
+        {
+            do
+            {
+                if (arguments.Count >= 255)
+                    Error(Peek(), "Can't have more than 255 arguments.");
+                arguments.Add(Expression());
+            } while (Match(TokenType.Comma));
+        }
+        var paren = Consume(TokenType.RightParen, "Expected ')' after arguments.");
+        return new Call(callee, paren, arguments);
     }
 
     private Token Consume(TokenType type, string message)

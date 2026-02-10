@@ -1,4 +1,5 @@
-﻿using Lox.Expressions;
+﻿using Lox.Callables;
+using Lox.Expressions;
 using Lox.Statements;
 
 namespace Lox;
@@ -6,10 +7,18 @@ namespace Lox;
 public class Interpreter : Expressions.IVisitor<object?>, Statements.IVisitor<None?>
 {
     private class BreakExecutedException : Exception {}
-    
-    private Environment _environment = new();
-    
+
+    private readonly Environment _globals;
+    private Environment _environment;
+
     public bool ShouldPrintEvaluatedExpressions { get; set; } = false;
+
+    public Interpreter()
+    {
+        _globals = new Environment();
+        _environment = _globals;
+        _globals.Define("clock", new Clock());
+    }
     
     public void Interpret(IEnumerable<Stmt> statements)
     {
@@ -155,6 +164,16 @@ public class Interpreter : Expressions.IVisitor<object?>, Statements.IVisitor<No
         }
 
         return Evaluate(logical.Right);
+    }
+
+    public object? Visit(Call call)
+    {
+        var function = Evaluate(call.Callee) is ILoxCallable callable ? 
+            callable : throw new RuntimeErrorException(call.Parenthesis, "Can only call functions and classes.");
+        var arguments = call.Arguments.Select(Evaluate).ToList();
+        if (arguments.Count != function.Arity)
+            throw new RuntimeErrorException(call.Parenthesis, $"Expected {function.Arity} arguments, got {arguments.Count}.");
+        return function.Call(this, arguments);
     }
 
     public None? Visit(Expression expression)

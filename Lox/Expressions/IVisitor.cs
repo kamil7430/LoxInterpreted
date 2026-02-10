@@ -10,4 +10,5 @@ public interface IVisitor<out T>
     T Visit(Variable variable);
     T Visit(Assign assign);
     T Visit(Logical logical);
+    T Visit(Call call);
 }
