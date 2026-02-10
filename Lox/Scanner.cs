@@ -19,7 +19,8 @@ public class Scanner
         { "this", TokenType.This },
         { "true", TokenType.True },
         { "var", TokenType.Var },
-        { "while", TokenType.While }
+        { "while", TokenType.While },
+        { "break", TokenType.Break },
     };
     
     private readonly string _source;

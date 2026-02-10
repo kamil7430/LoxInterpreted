@@ -6,7 +6,8 @@ namespace Lox;
 /*
 program        → declaration* EOF ;
 declaration    → varDecl | statement ;
-statement      → exprStmt | forStmt | ifStmt | printStmt | whileStmt | block ;
+statement      → exprStmt | forStmt | ifStmt | printStmt | whileStmt | 
+               | breakStmt | block ;
 
 varDecl        → "var" IDENTIFIER ( "=" expression )? ";" ;
 exprStmt       → expression ";" ;
@@ -15,6 +16,7 @@ forStmt        → "for" "(" ( varDecl | exprStmt | ";" ) expression? ";"
 ifStmt         → "if" "(" expression ")" statement ( "else" statement )? ;
 printStmt      → "print" expression ";" ;
 whileStmt      → "while" "(" expression ")" statement ;
+breakStmt      → "break" ";" ;
 block          → "{" declaration* "}" ;
  
 expression     → comma ;
@@ -38,6 +40,7 @@ public class Parser
     
     private readonly List<Token> _tokens;
     private int _current = 0;
+    private bool _isInsideLoop = false;
     
     public Parser(List<Token> tokens)
     {
@@ -83,7 +86,7 @@ public class Parser
         return new Var(name, initializer);
     }
 
-    // statement → exprStmt | forStmt | ifStmt | printStmt | whileStmt | block ;
+    // statement → exprStmt | forStmt | ifStmt | printStmt | whileStmt | breakStmt | block ;
     private Stmt Statement()
     {
         if (Match(TokenType.For))
@@ -94,6 +97,8 @@ public class Parser
             return PrintStatement();
         if (Match(TokenType.While))
             return WhileStatement();
+        if (Match(TokenType.Break))
+            return BreakStatement();
         if (Match(TokenType.LeftBrace))
             return new Block(Block());
         return ExpressionStatement();
@@ -122,7 +127,9 @@ public class Parser
             increment = Expression();
         Consume(TokenType.RightParen, "Expected ')' after for clauses.");
 
+        _isInsideLoop = true;
         var body = Statement();
+        _isInsideLoop = false;
 
         if (increment != null)
             body = new Block([
@@ -179,7 +186,19 @@ public class Parser
         Consume(TokenType.LeftParen, "Expected '(' after 'while'.");
         var condition = Expression();
         Consume(TokenType.RightParen, "Expected ')' after while condition.");
-        return new While(condition, Statement());
+        _isInsideLoop = true;
+        var body = Statement();
+        _isInsideLoop = false;
+        return new While(condition, body);
+    }
+
+    // breakStmt → "break" ";" ;
+    private Stmt BreakStatement()
+    {
+        if (!_isInsideLoop)
+            throw Error(Previous(), "'break' token outside of a loop!");
+        Consume(TokenType.Semicolon, "Expected ';' after 'break'.");
+        return new Break();
     }
     
     // block → "{" declaration* "}" ;

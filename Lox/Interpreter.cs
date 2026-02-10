@@ -5,6 +5,8 @@ namespace Lox;
 
 public class Interpreter : Expressions.IVisitor<object?>, Statements.IVisitor<None?>
 {
+    private class BreakExecutedException : Exception {}
+    
     private Environment _environment = new();
     
     public bool ShouldPrintEvaluatedExpressions { get; set; } = false;
@@ -197,10 +199,17 @@ public class Interpreter : Expressions.IVisitor<object?>, Statements.IVisitor<No
 
     public None? Visit(While @while)
     {
-        while (IsTruthy(Evaluate(@while.Condition)))
-            Execute(@while.Body);
+        try
+        {
+            while (IsTruthy(Evaluate(@while.Condition)))
+                Execute(@while.Body);
+        }
+        catch (BreakExecutedException) { }
         return null;
     }
+
+    public None? Visit(Break @break)
+        => throw new BreakExecutedException();
 
     private void ExecuteBlock(List<Stmt> statements, Environment environment)
     {
