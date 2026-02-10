@@ -6,10 +6,12 @@ namespace Lox;
 /*
 program        → declaration* EOF ;
 declaration    → varDecl | statement ;
-statement      → exprStmt | ifStmt | printStmt | whileStmt | block ;
+statement      → exprStmt | forStmt | ifStmt | printStmt | whileStmt | block ;
 
 varDecl        → "var" IDENTIFIER ( "=" expression )? ";" ;
 exprStmt       → expression ";" ;
+forStmt        → "for" "(" ( varDecl | exprStmt | ";" ) expression? ";" 
+               expression? ")" statement ;
 ifStmt         → "if" "(" expression ")" statement ( "else" statement )? ;
 printStmt      → "print" expression ";" ;
 whileStmt      → "while" "(" expression ")" statement ;
@@ -25,8 +27,7 @@ equality       → comparison ( ( "!=" | "==" ) comparison )* ;
 comparison     → term ( ( ">" | ">=" | "<" | "<=" ) term )* ;
 term           → factor ( ( "-" | "+" ) factor )* ;
 factor         → unary ( ( "/" | "*" ) unary )* ;
-unary          → ( "!" | "-" ) unary
-               | primary ;
+unary          → ( "!" | "-" ) unary | primary ;
 primary        → NUMBER | STRING | "true" | "false" | "nil"
                | "(" expression ")" | IDENTIFIER ;
 */
@@ -82,9 +83,11 @@ public class Parser
         return new Var(name, initializer);
     }
 
-    // statement → exprStmt | ifStmt | printStmt | whileStmt | block ;
+    // statement → exprStmt | forStmt | ifStmt | printStmt | whileStmt | block ;
     private Stmt Statement()
     {
+        if (Match(TokenType.For))
+            return ForStatement();
         if (Match(TokenType.If))
             return IfStatement();
         if (Match(TokenType.Print))
@@ -94,6 +97,49 @@ public class Parser
         if (Match(TokenType.LeftBrace))
             return new Block(Block());
         return ExpressionStatement();
+    }
+
+    // forStmt → "for" "(" ( varDecl | exprStmt | ";" ) expression? ";" expression? ")" statement ;
+    private Stmt ForStatement()
+    {
+        Consume(TokenType.LeftParen, "Expected '(' after 'for'.");
+
+        Stmt? initializer;
+        if (Match(TokenType.Semicolon))
+            initializer = null;
+        else if (Match(TokenType.Var))
+            initializer = VarDeclaration();
+        else
+            initializer = ExpressionStatement();
+
+        Expr? condition = null;
+        if (!Check(TokenType.Semicolon))
+            condition = Expression();
+        Consume(TokenType.Semicolon, "Expected ';' after loop condition.");
+
+        Expr? increment = null;
+        if (!Check(TokenType.RightParen))
+            increment = Expression();
+        Consume(TokenType.RightParen, "Expected ')' after for clauses.");
+
+        var body = Statement();
+
+        if (increment != null)
+            body = new Block([
+                body,
+                new Expression(increment),
+            ]);
+
+        condition ??= new Literal(true);
+        body = new While(condition, body);
+
+        if (initializer != null)
+            body = new Block([
+                initializer,
+                body
+            ]);
+
+        return body;
     }
 
     // exprStmt → expression ";" ;

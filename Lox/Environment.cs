@@ -33,14 +33,13 @@ public class Environment
     public void Assign(Token name, object? value)
     {
         if (!_values.ContainsKey(name.Lexeme))
-            throw new RuntimeErrorException(name, $"Undefined variable {name.Lexeme}.");
-
-        if (_enclosing != null)
         {
+            if (_enclosing == null) 
+                throw new RuntimeErrorException(name, $"Undefined variable {name.Lexeme}.");
             _enclosing.Assign(name, value);
             return;
         }
-        
+
         _values[name.Lexeme] = value;
     }
 }
