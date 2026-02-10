@@ -1,0 +1,16 @@
+// Initial values
+var previous = 0;
+var current = 1;
+print "[0]: " + previous;
+print "[1]: " + current;
+
+// Main Fibonacci numbers calculation loop
+var iteration = 2;
+while (iteration < 20) {
+    // F_n+1 = F_n + F_n-1
+    var tmp = current;
+    current = previous + current;
+    previous = tmp;
+    print "[" + iteration + "]: " + current;
+    iteration = iteration + 1;
+}
