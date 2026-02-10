@@ -164,6 +164,15 @@ public class Interpreter : Expressions.IVisitor<object?>, Statements.IVisitor<No
         return null;
     }
 
+    public None? Visit(If @if)
+    {
+        if (IsTruthy(Evaluate(@if.Condition)))
+            Execute(@if.ThenBranch);
+        else if (@if.ElseBranch != null)
+            Execute(@if.ElseBranch);
+        return null;
+    }
+
     private void ExecuteBlock(List<Stmt> statements, Environment environment)
     {
         var previous = _environment;

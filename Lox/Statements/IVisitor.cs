@@ -6,4 +6,5 @@ public interface IVisitor<out T>
     T Visit(Print print);
     T Visit(Var var);
     T Visit(Block block);
+    T Visit(If @if);
 }

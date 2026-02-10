@@ -6,10 +6,11 @@ namespace Lox;
 /*
 program        → declaration* EOF ;
 declaration    → varDecl | statement ;
-statement      → exprStmt | printStmt | block ;
+statement      → exprStmt | ifStmt | printStmt | block ;
 
 varDecl        → "var" IDENTIFIER ( "=" expression )? ";" ;
 exprStmt       → expression ";" ;
+ifStmt         → "if" "(" expression ")" statement ( "else" statement )? ;
 printStmt      → "print" expression ";" ;
 block          → "{" declaration "}" ;
  
@@ -78,9 +79,11 @@ public class Parser
         return new Var(name, initializer);
     }
 
-    // statement → exprStmt | printStmt | block ;
+    // statement → exprStmt | ifStmt | printStmt | block ;
     private Stmt Statement()
     {
+        if (Match(TokenType.If))
+            return IfStatement();
         if (Match(TokenType.Print))
             return PrintStatement();
         if (Match(TokenType.LeftBrace))
@@ -96,6 +99,21 @@ public class Parser
         return new Expression(expr);
     }
 
+    // ifStmt → "if" "(" expression ")" statement ( "else" statement )? ;
+    private Stmt IfStatement()
+    {
+        Consume(TokenType.LeftParen, "Expected '(' after 'if'.");
+        var condition = Expression();
+        Consume(TokenType.RightParen, "Expected ')' after if condition.");
+
+        var thenBranch = Statement();
+        Stmt? elseBranch = null;
+        if (Match(TokenType.Else))
+            elseBranch = Statement();
+
+        return new If(condition, thenBranch, elseBranch);
+    }
+    
     // printStmt → "print" expression ";" ;
     private Stmt PrintStatement()
     {
