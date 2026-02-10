@@ -5,10 +5,12 @@ namespace Lox;
 
 /*
 program        → declaration* EOF ;
-declaration    → varDecl | statement ;
+declaration    → funDecl | varDecl | statement ;
 statement      → exprStmt | forStmt | ifStmt | printStmt | whileStmt | 
                | breakStmt | block ;
 
+funDecl        → "fun" function ;
+function       → IDENTIFIER "(" parameters? ")" block ;
 varDecl        → "var" IDENTIFIER ( "=" expression )? ";" ;
 exprStmt       → expression ";" ;
 forStmt        → "for" "(" ( varDecl | exprStmt | ";" ) expression? ";" 
@@ -34,7 +36,8 @@ call           → primary ( "(" arguments? ")" )* ;
 primary        → NUMBER | STRING | "true" | "false" | "nil"
                | "(" expression ")" | IDENTIFIER ;
 
-arguments      → expression ( "," expression )* ;
+parameters     → IDENTIFIER ( "," IDENTIFIER )* ;
+arguments      → assignment ( "," assignment )* ;
 */
 
 public class Parser
@@ -59,11 +62,13 @@ public class Parser
         return statements;
     }
 
-    // declaration → varDecl | statement ;
+    // declaration → funDecl | varDecl | statement ;
     private Stmt Declaration()
     {
         try
         {
+            if (Match(TokenType.Fun))
+                return Function("function");
             if (Match(TokenType.Var))
                 return VarDeclaration();
 
@@ -76,6 +81,31 @@ public class Parser
         }
     }
 
+    // funDecl    → "fun" function ;
+    // function   → IDENTIFIER "(" parameters? ")" block ;
+    // parameters → IDENTIFIER ( "," IDENTIFIER )* ;
+    private Stmt Function(string kind)
+    {
+        var name = Consume(TokenType.Identifier, $"Expected {kind} name.");
+        Consume(TokenType.LeftParen, $"Expected '(' after {kind} name.");
+        
+        List<Token> parameters = [];
+        if (!Check(TokenType.RightParen))
+        {
+            do
+            {
+                if (parameters.Count >= 255)
+                    Error(Peek(), "Can't have more than 255 parameters.");
+                parameters.Add(Consume(TokenType.Identifier, "Expected parameter name."));
+            } while (Match(TokenType.Comma));
+        }
+        Consume(TokenType.RightParen, "Expected ')' after parameter list.");
+
+        Consume(TokenType.LeftBrace, $"Expected '{{' before {kind} body.");
+        var body = Block();
+        return new Function(name, parameters, body);
+    }
+    
     // varDecl → "var" IDENTIFIER ( "=" expression )? ";" ;
     private Stmt VarDeclaration()
     {
@@ -370,6 +400,7 @@ public class Parser
         throw Error(Peek(), "Expected expression.");
     }
 
+    // arguments → assignment ( "," assignment )* ;
     private Expr FinishCall(Expr callee)
     {
         List<Expr> arguments = [];
@@ -379,7 +410,7 @@ public class Parser
             {
                 if (arguments.Count >= 255)
                     Error(Peek(), "Can't have more than 255 arguments.");
-                arguments.Add(Expression());
+                arguments.Add(Assignment());
             } while (Match(TokenType.Comma));
         }
         var paren = Consume(TokenType.RightParen, "Expected ')' after arguments.");

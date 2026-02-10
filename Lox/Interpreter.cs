@@ -8,16 +8,16 @@ public class Interpreter : Expressions.IVisitor<object?>, Statements.IVisitor<No
 {
     private class BreakExecutedException : Exception {}
 
-    private readonly Environment _globals;
+    public Environment Globals { get; }
     private Environment _environment;
 
     public bool ShouldPrintEvaluatedExpressions { get; set; } = false;
 
     public Interpreter()
     {
-        _globals = new Environment();
-        _environment = _globals;
-        _globals.Define("clock", new Clock());
+        Globals = new Environment();
+        _environment = Globals;
+        Globals.Define("clock", new Clock());
     }
     
     public void Interpret(IEnumerable<Stmt> statements)
@@ -230,7 +230,14 @@ public class Interpreter : Expressions.IVisitor<object?>, Statements.IVisitor<No
     public None? Visit(Break @break)
         => throw new BreakExecutedException();
 
-    private void ExecuteBlock(List<Stmt> statements, Environment environment)
+    public None? Visit(Function function)
+    {
+        var fun = new LoxFunction(function);
+        _environment.Define(function.Name.Lexeme, fun);
+        return null;
+    }
+
+    public void ExecuteBlock(List<Stmt> statements, Environment environment)
     {
         var previous = _environment;
         try
