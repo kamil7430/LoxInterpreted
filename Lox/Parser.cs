@@ -12,7 +12,7 @@ varDecl        → "var" IDENTIFIER ( "=" expression )? ";" ;
 exprStmt       → expression ";" ;
 ifStmt         → "if" "(" expression ")" statement ( "else" statement )? ;
 printStmt      → "print" expression ";" ;
-block          → "{" declaration "}" ;
+block          → "{" declaration* "}" ;
  
 expression     → comma ;
 comma          → assignment ( "," assignment )* ;
@@ -124,7 +124,7 @@ public class Parser
         return new Print(value);
     }
     
-    // block → "{" declaration "}" ;
+    // block → "{" declaration* "}" ;
     private List<Stmt> Block()
     {
         List<Stmt> statements = [];
