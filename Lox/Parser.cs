@@ -14,10 +14,10 @@ ifStmt         → "if" "(" expression ")" statement ( "else" statement )? ;
 printStmt      → "print" expression ";" ;
 block          → "{" declaration "}" ;
  
-expression     → assignment ;
+expression     → comma ;
+comma          → assignment ( "," assignment )* ;
 assignment     → IDENTIFIER "=" assignment | conditional ;
-conditional    → comma ( "?" comma ":" comma )* ;
-comma          → logic_or ( "," logic_or )* ;
+conditional    → logic_or ( "?" logic_or ":" logic_or )* ;
 logic_or       → logic_and ( "or" logic_and )* ;
 logic_and      → equality ( "and" equality )* ;
 equality       → comparison ( ( "!=" | "==" ) comparison )* ;
@@ -134,9 +134,18 @@ public class Parser
         return statements;
     }
 
-    // expression → assignment ;
+    // expression → comma ;
     private Expr Expression()
-        => Assignment();
+        => Comma();
+    
+    // comma → assignment ( "," assignment )* ;
+    private Expr Comma()
+    {
+        var expr = Assignment();
+        while (Match(TokenType.Comma))
+            expr = new Binary(expr, Previous(), Assignment());
+        return expr;
+    }
     
     // assignment → IDENTIFIER "=" assignment | conditional ;
     private Expr Assignment()
@@ -156,17 +165,17 @@ public class Parser
         return expr;
     }
 
-    // conditional → comma ( "?" comma ":" comma )* ;
+    // conditional → logic_or ( "?" logic_or ":" logic_or )* ;
     private Expr Conditional()
     {
         Stack<Expr> exprs = [];
-        exprs.Push(Comma());
+        exprs.Push(LogicOr());
         
         while (Match(TokenType.QuestionMark))
         {
-            exprs.Push(Comma());
+            exprs.Push(LogicOr());
             if (Match(TokenType.Colon))
-                exprs.Push(Comma());
+                exprs.Push(LogicOr());
             else
                 throw Error(Peek(), "Expected ':' in conditional expression.");
         }
@@ -179,15 +188,6 @@ public class Parser
             expr = new Ternary(condition, ifTrue, expr);
         }
 
-        return expr;
-    }
-
-    // comma → logic_or ( "," logic_or )* ;
-    private Expr Comma()
-    {
-        var expr = LogicOr();
-        while (Match(TokenType.Comma))
-            expr = new Binary(expr, Previous(), LogicOr());
         return expr;
     }
 
