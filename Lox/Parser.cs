@@ -6,12 +6,13 @@ namespace Lox;
 /*
 program        → declaration* EOF ;
 declaration    → varDecl | statement ;
-statement      → exprStmt | ifStmt | printStmt | block ;
+statement      → exprStmt | ifStmt | printStmt | whileStmt | block ;
 
 varDecl        → "var" IDENTIFIER ( "=" expression )? ";" ;
 exprStmt       → expression ";" ;
 ifStmt         → "if" "(" expression ")" statement ( "else" statement )? ;
 printStmt      → "print" expression ";" ;
+whileStmt      → "while" "(" expression ")" statement ;
 block          → "{" declaration* "}" ;
  
 expression     → comma ;
@@ -81,13 +82,15 @@ public class Parser
         return new Var(name, initializer);
     }
 
-    // statement → exprStmt | ifStmt | printStmt | block ;
+    // statement → exprStmt | ifStmt | printStmt | whileStmt | block ;
     private Stmt Statement()
     {
         if (Match(TokenType.If))
             return IfStatement();
         if (Match(TokenType.Print))
             return PrintStatement();
+        if (Match(TokenType.While))
+            return WhileStatement();
         if (Match(TokenType.LeftBrace))
             return new Block(Block());
         return ExpressionStatement();
@@ -122,6 +125,15 @@ public class Parser
         var value = Expression();
         Consume(TokenType.Semicolon, "Expected ';' after value!");
         return new Print(value);
+    }
+
+    // whileStmt → "while" "(" expression ")" statement ;
+    private Stmt WhileStatement()
+    {
+        Consume(TokenType.LeftParen, "Expected '(' after 'while'.");
+        var condition = Expression();
+        Consume(TokenType.RightParen, "Expected ')' after while condition.");
+        return new While(condition, Statement());
     }
     
     // block → "{" declaration* "}" ;

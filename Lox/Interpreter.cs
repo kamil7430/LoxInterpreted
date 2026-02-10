@@ -195,6 +195,13 @@ public class Interpreter : Expressions.IVisitor<object?>, Statements.IVisitor<No
         return null;
     }
 
+    public None? Visit(While @while)
+    {
+        while (IsTruthy(Evaluate(@while.Condition)))
+            Execute(@while.Body);
+        return null;
+    }
+
     private void ExecuteBlock(List<Stmt> statements, Environment environment)
     {
         var previous = _environment;
