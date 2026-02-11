@@ -11,6 +11,7 @@ public class Resolver : Expressions.IVisitor<None?>, Statements.IVisitor<None?>
         Function,
         Lambda,
         Method,
+        Initializer,
     }
 
     private enum ClassType
@@ -258,9 +259,14 @@ public class Resolver : Expressions.IVisitor<None?>, Statements.IVisitor<None?>
     {
         if (_currentFunction == FunctionType.None)
             Program.Error(@return.Keyword, "Can't return from top-level code.");
-        
+
         if (@return.Value != null)
+        {
+            if (_currentFunction == FunctionType.Initializer)
+                Program.Error(@return.Keyword, "Can't return a value from an initializer.");
             Resolve(@return.Value);
+        }
+
         return null;
     }
 
@@ -278,6 +284,8 @@ public class Resolver : Expressions.IVisitor<None?>, Statements.IVisitor<None?>
         foreach (var method in @class.Methods)
         {
             var declaration = FunctionType.Method;
+            if (method.Name.Lexeme.Equals("init"))
+                declaration = FunctionType.Initializer;
             ResolveFunctionlike(method, declaration);
         }
         

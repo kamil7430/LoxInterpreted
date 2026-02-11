@@ -183,7 +183,7 @@ public class Interpreter : Expressions.IVisitor<object?>, Statements.IVisitor<No
     }
 
     public object? Visit(Lambda lambda)
-        => new LoxFunction(lambda, _environment);
+        => new LoxFunction(lambda, _environment, false);
 
     public object? Visit(Get get)
     {
@@ -260,7 +260,7 @@ public class Interpreter : Expressions.IVisitor<object?>, Statements.IVisitor<No
 
     public None? Visit(Function function)
     {
-        var fun = new LoxFunction(function, _environment);
+        var fun = new LoxFunction(function, _environment, false);
         _environment.Define(function.Name.Lexeme, fun);
         return null;
     }
@@ -280,7 +280,7 @@ public class Interpreter : Expressions.IVisitor<object?>, Statements.IVisitor<No
         Dictionary<string, LoxFunction> methods = [];
         foreach (var method in @class.Methods)
         {
-            var function = new LoxFunction(method, _environment);
+            var function = new LoxFunction(method, _environment, method.Name.Lexeme.Equals("init"));
             methods.Add(method.Name.Lexeme, function);
         }
         
