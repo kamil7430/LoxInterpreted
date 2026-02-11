@@ -273,7 +273,15 @@ public class Interpreter : Expressions.IVisitor<object?>, Statements.IVisitor<No
     public None? Visit(Class @class)
     {
         _environment.Define(@class.Name.Lexeme, null);
-        var klass = new LoxClass(@class.Name.Lexeme);
+
+        Dictionary<string, LoxFunction> methods = [];
+        foreach (var method in @class.Methods)
+        {
+            var function = new LoxFunction(method, _environment);
+            methods.Add(method.Name.Lexeme, function);
+        }
+        
+        var klass = new LoxClass(@class.Name.Lexeme, methods);
         _environment.Assign(@class.Name, klass);
         return null;
     }

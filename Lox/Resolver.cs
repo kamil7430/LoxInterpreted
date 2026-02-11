@@ -10,6 +10,7 @@ public class Resolver : Expressions.IVisitor<None?>, Statements.IVisitor<None?>
         None,
         Function,
         Lambda,
+        Method,
     }
 
     private class VariableDetails(Token name, bool initialized, bool used)
@@ -251,6 +252,13 @@ public class Resolver : Expressions.IVisitor<None?>, Statements.IVisitor<None?>
     {
         Declare(@class.Name);
         Define(@class.Name);
+
+        foreach (var method in @class.Methods)
+        {
+            var declaration = FunctionType.Method;
+            ResolveFunctionlike(method, declaration);
+        }
+
         return null;
     }
 }

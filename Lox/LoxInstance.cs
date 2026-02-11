@@ -16,6 +16,11 @@ public class LoxInstance
     {
         if (_fields.TryGetValue(name.Lexeme, out var value))
             return value;
+
+        var method = _class.FindMethod(name.Lexeme);
+        if (method != null)
+            return method;
+        
         throw new RuntimeErrorException(name, $"Undefined property {name.Lexeme}.");
     }
 
