@@ -7,10 +7,11 @@ namespace Lox;
 
 /*
 program        → declaration* EOF ;
-declaration    → funDecl | varDecl | statement ;
+declaration    → classDecl | funDecl | varDecl | statement ;
 statement      → exprStmt | forStmt | ifStmt | printStmt | returnStmt
                | whileStmt | breakStmt | block ;
 
+classDecl      → "class" IDENTIFIER "{" function* "}" ;
 funDecl        → "fun" function ;
 function       → IDENTIFIER "(" parameters? ")" block ;
 varDecl        → "var" IDENTIFIER ( "=" expression )? ";" ;
@@ -66,11 +67,13 @@ public class Parser
         return statements;
     }
 
-    // declaration → funDecl | varDecl | statement ;
+    // declaration → classDecl | funDecl | varDecl | statement ;
     private Stmt Declaration()
     {
         try
         {
+            if (Match(TokenType.Class))
+                return ClassDeclaration();
             if (Match(TokenType.Fun))
                 return Function("function");
             if (Match(TokenType.Var))
@@ -85,10 +88,24 @@ public class Parser
         }
     }
 
+    // classDecl → "class" IDENTIFIER "{" function* "}" ;
+    private Stmt ClassDeclaration()
+    {
+        var name = Consume(TokenType.Identifier, "Expected class name.");
+        Consume(TokenType.LeftBrace, "Expected '{' before class body.");
+
+        List<Function> methods = [];
+        while (!Check(TokenType.RightBrace) && !IsAtEnd())
+            methods.Add(Function("method"));
+
+        Consume(TokenType.RightBrace, "Expected '}' after class body.");
+        return new Class(name, methods);
+    }
+
     // funDecl    → "fun" function ;
     // function   → IDENTIFIER "(" parameters? ")" block ;
     // parameters → IDENTIFIER ( "," IDENTIFIER )* ;
-    private Stmt Function(string kind)
+    private Function Function(string kind)
     {
         var name = Consume(TokenType.Identifier, $"Expected {kind} name.");
         Consume(TokenType.LeftParen, $"Expected '(' after {kind} name.");

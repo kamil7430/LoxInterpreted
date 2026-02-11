@@ -11,4 +11,5 @@ public interface IVisitor<out T>
     T Visit(Break @break);
     T Visit(Function function);
     T Visit(Return @return);
+    T Visit(Class @class);
 }

@@ -233,4 +233,11 @@ public class Resolver : Expressions.IVisitor<None?>, Statements.IVisitor<None?>
             Resolve(@return.Value);
         return null;
     }
+
+    public None? Visit(Class @class)
+    {
+        Declare(@class.Name);
+        Define(@class.Name);
+        return null;
+    }
 }
