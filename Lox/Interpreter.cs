@@ -232,7 +232,7 @@ public class Interpreter : Expressions.IVisitor<object?>, Statements.IVisitor<No
 
     public None? Visit(Function function)
     {
-        var fun = new LoxFunction(function);
+        var fun = new LoxFunction(function, _environment);
         _environment.Define(function.Name.Lexeme, fun);
         return null;
     }
