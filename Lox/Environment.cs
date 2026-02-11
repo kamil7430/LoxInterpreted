@@ -42,4 +42,18 @@ public class Environment
 
         _values[name.Lexeme] = value;
     }
+
+    public object? GetAt(int distance, string name)
+        => Ancestor(distance)._values[name];
+
+    private Environment Ancestor(int distance)
+    {
+        var environment = this;
+        for (int i = 0; i < distance; i++)
+            environment = environment._enclosing;
+        return environment;
+    }
+
+    public void AssignAt(int distance, Token name, object? value)
+        => Ancestor(distance)._values[name.Lexeme] = value;
 }

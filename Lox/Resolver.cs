@@ -5,15 +5,23 @@ namespace Lox;
 
 public class Resolver : Expressions.IVisitor<None?>, Statements.IVisitor<None?>
 {
+    private enum FunctionType
+    {
+        None,
+        Function,
+        Lambda,
+    }
+    
     private readonly Interpreter _interpreter;
     private readonly Stack<Dictionary<string, bool>> _scopes = new();
+    private FunctionType _currentFunction = FunctionType.None;
 
     public Resolver(Interpreter interpreter)
     {
         _interpreter = interpreter;
     }
 
-    private void Resolve(List<Stmt> statements)
+    public void Resolve(List<Stmt> statements)
         => statements.ForEach(Resolve);
 
     private void Resolve(Stmt statement)
@@ -103,7 +111,7 @@ public class Resolver : Expressions.IVisitor<None?>, Statements.IVisitor<None?>
 
     public None? Visit(Lambda lambda)
     {
-        ResolveFunctionlike(lambda);
+        ResolveFunctionlike(lambda, FunctionType.Lambda);
         return null;
     }
 
@@ -132,7 +140,8 @@ public class Resolver : Expressions.IVisitor<None?>, Statements.IVisitor<None?>
     {
         if (_scopes.Count <= 0)
             return;
-        _scopes.Peek().Add(name.Lexeme, false);
+        if (!_scopes.Peek().TryAdd(name.Lexeme, false))
+            Program.Error(name, "A variable with this name is already in this scope.");
     }
 
     private void Define(Token name)
@@ -180,12 +189,15 @@ public class Resolver : Expressions.IVisitor<None?>, Statements.IVisitor<None?>
         Declare(function.Name);
         Define(function.Name);
         
-        ResolveFunctionlike(function);
+        ResolveFunctionlike(function, FunctionType.Function);
         return null;
     }
 
-    private void ResolveFunctionlike(IFunctionlike functionlike)
+    private void ResolveFunctionlike(IFunctionlike functionlike, FunctionType type)
     {
+        var enclosingFunction = _currentFunction;
+        _currentFunction = type;
+        
         BeginScope();
         foreach (var param in functionlike.Params)
         {
@@ -194,10 +206,15 @@ public class Resolver : Expressions.IVisitor<None?>, Statements.IVisitor<None?>
         }
         Resolve(functionlike.Body);
         EndScope();
+
+        _currentFunction = enclosingFunction;
     }
 
     public None? Visit(Return @return)
     {
+        if (_currentFunction == FunctionType.None)
+            Program.Error(@return.Keyword, "Can't return from top-level code.");
+        
         if (@return.Value != null)
             Resolve(@return.Value);
         return null;

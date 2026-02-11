@@ -10,6 +10,7 @@ public class Interpreter : Expressions.IVisitor<object?>, Statements.IVisitor<No
 
     public Environment Globals { get; }
     private Environment _environment;
+    private readonly Dictionary<Expr, int> _locals = [];
 
     public bool ShouldPrintEvaluatedExpressions { get; set; } = false;
 
@@ -138,12 +139,17 @@ public class Interpreter : Expressions.IVisitor<object?>, Statements.IVisitor<No
     }
 
     public object? Visit(Variable variable)
-        => _environment.Get(variable.Name);
+        => LookUpVariable(variable.Name, variable);
 
     public object? Visit(Assign assign)
     {
         var value = Evaluate(assign.Value);
-        _environment.Assign(assign.Name, value);
+
+        if (_locals.TryGetValue(assign, out var distance))
+            _environment.AssignAt(distance, assign.Name, value);
+        else
+            Globals.Assign(assign.Name, value);
+        
         return value;
     }
 
@@ -263,6 +269,13 @@ public class Interpreter : Expressions.IVisitor<object?>, Statements.IVisitor<No
         }
     }
 
+    private object? LookUpVariable(Token name, Expr expr)
+    {
+        if (_locals.TryGetValue(expr, out var distance))
+            return _environment.GetAt(distance, name.Lexeme);
+        return Globals.Get(name);
+    }
+
     private object? Evaluate(Expr expr)
         => expr.Accept(this);
 
@@ -290,4 +303,7 @@ public class Interpreter : Expressions.IVisitor<object?>, Statements.IVisitor<No
         if (right is not double)
             throw new RuntimeErrorException(@operator, "Right operand must be a number!");
     }
+
+    public void Resolve(Expr expr, int depth)
+        => _locals[expr] = depth;
 }
