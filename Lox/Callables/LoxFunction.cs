@@ -1,16 +1,17 @@
+using Lox.Expressions;
 using Lox.Statements;
 
 namespace Lox.Callables;
 
 public class LoxFunction : ILoxCallable
 {
-    private readonly Function _declaration;
+    private readonly IFunctionlike _declaration;
     private readonly Environment _closure;
 
     public int Arity
         => _declaration.Params.Count;
 
-    public LoxFunction(Function declaration, Environment closure)
+    public LoxFunction(IFunctionlike declaration, Environment closure)
     {
         _declaration = declaration;
         _closure = closure;
@@ -33,5 +34,10 @@ public class LoxFunction : ILoxCallable
     }
 
     public override string ToString()
-        => $"<fn {_declaration.Name.Lexeme}>";
+        => _declaration switch
+        {
+            Function f => $"<fn {f.Name.Lexeme}>",
+            Lambda => "<anonymous fn>",
+            _ => throw new NotSupportedException(),
+        };
 }

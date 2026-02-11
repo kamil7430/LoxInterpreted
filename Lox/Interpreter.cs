@@ -176,6 +176,9 @@ public class Interpreter : Expressions.IVisitor<object?>, Statements.IVisitor<No
         return function.Call(this, arguments);
     }
 
+    public object? Visit(Lambda lambda)
+        => new LoxFunction(lambda, _environment);
+
     public None? Visit(Expression expression)
     {
         var value = Evaluate(expression.Expr);

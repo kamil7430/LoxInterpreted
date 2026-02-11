@@ -11,4 +11,5 @@ public interface IVisitor<out T>
     T Visit(Assign assign);
     T Visit(Logical logical);
     T Visit(Call call);
+    T Visit(Lambda lambda);
 }

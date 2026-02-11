@@ -1,5 +1,7 @@
-﻿using Lox.Expressions;
+﻿using System.Linq.Expressions;
+using Lox.Expressions;
 using Lox.Statements;
+using Expression = Lox.Statements.Expression;
 
 namespace Lox;
 
@@ -35,7 +37,8 @@ factor         → unary ( ( "/" | "*" ) unary )* ;
 unary          → ( "!" | "-" ) unary | call ;
 call           → primary ( "(" arguments? ")" )* ;
 primary        → NUMBER | STRING | "true" | "false" | "nil"
-               | "(" expression ")" | IDENTIFIER ;
+               | "(" expression ")" | IDENTIFIER | lambda ;
+lambda         → "fun" "(" parameters? ")" block ;
 
 parameters     → IDENTIFIER ( "," IDENTIFIER )* ;
 arguments      → assignment ( "," assignment )* ;
@@ -391,7 +394,7 @@ public class Parser
         return expr;
     }
 
-    // primary → NUMBER | STRING | "true" | "false" | "nil" | "(" expression ")" | IDENTIFIER ;
+    // primary → NUMBER | STRING | "true" | "false" | "nil" | "(" expression ")" | IDENTIFIER | lambda ;
     private Expr Primary()
     {
         if (Match(TokenType.True))
@@ -410,8 +413,32 @@ public class Parser
         }
         if (Match(TokenType.Identifier))
             return new Variable(Previous());
+        if (Match(TokenType.Fun))
+            return Lambda();
 
         throw Error(Peek(), "Expected expression.");
+    }
+
+    // lambda → "fun" "(" parameters? ")" block ;
+    private Expr Lambda()
+    {
+        Consume(TokenType.LeftParen, "Expected '(' after 'fun' in lambda declaration.");
+        
+        List<Token> parameters = [];
+        if (!Check(TokenType.RightParen))
+        {
+            do
+            {
+                if (parameters.Count >= 255)
+                    Error(Peek(), "Can't have more than 255 parameters.");
+                parameters.Add(Consume(TokenType.Identifier, "Expected parameter identifier."));
+            } while (Match(TokenType.Comma));
+        }
+
+        Consume(TokenType.RightParen, "Expected ')' after parameter list.");
+        Consume(TokenType.LeftBrace, "Expected '{' after parameters.");
+        var body = Block();
+        return new Lambda(parameters, body);
     }
 
     // arguments → assignment ( "," assignment )* ;

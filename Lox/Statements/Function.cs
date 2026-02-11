@@ -1,6 +1,6 @@
 namespace Lox.Statements;
 
-public class Function : Stmt
+public class Function : Stmt, IFunctionlike
 {
     public Function(Token name, List<Token> @params, List<Stmt> body)
     {
