@@ -36,7 +36,7 @@ comparison     → term ( ( ">" | ">=" | "<" | "<=" ) term )* ;
 term           → factor ( ( "-" | "+" ) factor )* ;
 factor         → unary ( ( "/" | "*" ) unary )* ;
 unary          → ( "!" | "-" ) unary | call ;
-call           → primary ( "(" arguments? ")" )* ;
+call           → primary ( "(" arguments? ")" | "." IDENTIFIER )* ;
 primary        → NUMBER | STRING | "true" | "false" | "nil"
                | "(" expression ")" | IDENTIFIER | lambda ;
 lambda         → "fun" "(" parameters? ")" block ;
@@ -397,7 +397,7 @@ public class Parser
         return new Unary(Previous(), Unary());
     }
 
-    // call → primary ( "(" arguments? ")" )* ;
+    // call → primary ( "(" arguments? ")" | "." IDENTIFIER )* ;
     private Expr Call()
     {
         var expr = Primary();
@@ -405,6 +405,11 @@ public class Parser
         {
             if (Match(TokenType.LeftParen))
                 expr = FinishCall(expr);
+            else if (Match(TokenType.Dot))
+            {
+                var name = Consume(TokenType.Identifier, "Expected property name after '.'.");
+                expr = new Get(expr, name);
+            }
             else 
                 break;
         }

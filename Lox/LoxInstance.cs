@@ -4,11 +4,19 @@ namespace Lox;
 
 public class LoxInstance
 {
-    private LoxClass _class;
+    private readonly LoxClass _class;
+    private readonly Dictionary<string, object?> _fields = [];
 
     public LoxInstance(LoxClass @class)
     {
         _class = @class;
+    }
+
+    public object? Get(Token name)
+    {
+        if (_fields.TryGetValue(name.Lexeme, out var value))
+            return value;
+        throw new RuntimeErrorException(name, $"Undefined property {name.Lexeme}.");
     }
 
     public override string ToString()

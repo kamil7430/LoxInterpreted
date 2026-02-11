@@ -185,6 +185,13 @@ public class Interpreter : Expressions.IVisitor<object?>, Statements.IVisitor<No
     public object? Visit(Lambda lambda)
         => new LoxFunction(lambda, _environment);
 
+    public object? Visit(Get get)
+    {
+        var obj = Evaluate(get.Object) as LoxInstance ?? 
+            throw new RuntimeErrorException(get.Name, "Only instances have properties.");
+        return obj.Get(get.Name);
+    }
+
     public None? Visit(Expression expression)
     {
         var value = Evaluate(expression.Expr);

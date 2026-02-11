@@ -124,6 +124,12 @@ public class Resolver : Expressions.IVisitor<None?>, Statements.IVisitor<None?>
         return null;
     }
 
+    public None? Visit(Get get)
+    {
+        Resolve(get.Object);
+        return null;
+    }
+
     public None? Visit(Expression expression)
     {
         Resolve(expression.Expr);
