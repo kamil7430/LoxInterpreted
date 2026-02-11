@@ -192,6 +192,15 @@ public class Interpreter : Expressions.IVisitor<object?>, Statements.IVisitor<No
         return obj.Get(get.Name);
     }
 
+    public object? Visit(Set set)
+    {
+        var obj = Evaluate(set.Object) as LoxInstance ?? 
+            throw new RuntimeErrorException(set.Name, "Only instances have properties.");
+        var value = Evaluate(set.Value);
+        obj.Set(set.Name, value);
+        return value;
+    }
+
     public None? Visit(Expression expression)
     {
         var value = Evaluate(expression.Expr);

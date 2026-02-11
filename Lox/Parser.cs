@@ -27,7 +27,7 @@ block          → "{" declaration* "}" ;
  
 expression     → comma ;
 comma          → assignment ( "," assignment )* ;
-assignment     → IDENTIFIER "=" assignment | conditional ;
+assignment     → ( call "." )? IDENTIFIER "=" assignment | conditional ;
 conditional    → logic_or ( "?" logic_or ":" logic_or )* ;
 logic_or       → logic_and ( "or" logic_and )* ;
 logic_and      → equality ( "and" equality )* ;
@@ -291,7 +291,7 @@ public class Parser
         return expr;
     }
     
-    // assignment → IDENTIFIER "=" assignment | conditional ;
+    // assignment → ( call "." )? IDENTIFIER "=" assignment | conditional ;
     private Expr Assignment()
     {
         var expr = Conditional();
@@ -302,6 +302,8 @@ public class Parser
             var value = Assignment();
             if (expr is Variable varExpr)
                 return new Assign(varExpr.Name, value);
+            if (expr is Get getExpr)
+                return new Set(getExpr.Object, getExpr.Name, value);
 
             Error(equals, "Invalid assignment target.");
         }

@@ -19,6 +19,9 @@ public class LoxInstance
         throw new RuntimeErrorException(name, $"Undefined property {name.Lexeme}.");
     }
 
+    public void Set(Token name, object? value)
+        => _fields[name.Lexeme] = value;
+
     public override string ToString()
         => $"<{_class.Name} instance>";
 }

@@ -130,6 +130,13 @@ public class Resolver : Expressions.IVisitor<None?>, Statements.IVisitor<None?>
         return null;
     }
 
+    public None? Visit(Set set)
+    {
+        Resolve(set.Object);
+        Resolve(set.Value);
+        return null;
+    }
+
     public None? Visit(Expression expression)
     {
         Resolve(expression.Expr);
