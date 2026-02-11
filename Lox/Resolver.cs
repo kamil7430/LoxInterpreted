@@ -13,6 +13,12 @@ public class Resolver : Expressions.IVisitor<None?>, Statements.IVisitor<None?>
         Method,
     }
 
+    private enum ClassType
+    {
+        None,
+        Class,
+    }
+
     private class VariableDetails(Token name, bool initialized, bool used)
     {
         public Token Name { get; set; } = name;
@@ -23,6 +29,7 @@ public class Resolver : Expressions.IVisitor<None?>, Statements.IVisitor<None?>
     private readonly Interpreter _interpreter;
     private readonly Stack<Dictionary<string, VariableDetails>> _scopes = new();
     private FunctionType _currentFunction = FunctionType.None;
+    private ClassType _currentClass = ClassType.None;
 
     public Resolver(Interpreter interpreter)
     {
@@ -140,7 +147,10 @@ public class Resolver : Expressions.IVisitor<None?>, Statements.IVisitor<None?>
 
     public None? Visit(This @this)
     {
-        ResolveLocal(@this, @this.Keyword);
+        if (_currentClass == ClassType.None)
+            Program.Error(@this.Keyword, "Can't use 'this' outside of a class.");
+        else
+            ResolveLocal(@this, @this.Keyword);
         return null;
     }
 
@@ -256,6 +266,9 @@ public class Resolver : Expressions.IVisitor<None?>, Statements.IVisitor<None?>
 
     public None? Visit(Class @class)
     {
+        var enclosingClass = _currentClass;
+        _currentClass = ClassType.Class;
+        
         Declare(@class.Name);
         Define(@class.Name);
 
@@ -270,6 +283,7 @@ public class Resolver : Expressions.IVisitor<None?>, Statements.IVisitor<None?>
         
         EndScope();
 
+        _currentClass = enclosingClass;
         return null;
     }
 }
