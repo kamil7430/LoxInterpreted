@@ -1,0 +1,31 @@
+class Calculator {
+    init(a, b) {
+        this.a = a;
+        this.b = b;
+    }
+
+    add() {return this.a + this.b;}
+    sub() {return this.a - this.b;}
+    mul() {return this.a * this.b;}
+    div() {return this.a / this.b;}
+    pow() {
+        var result = this.a;
+        var b = this.b;
+        while (b > 1) {
+            result = result * this.a;
+            b = b - 1;
+        }
+        return result;
+    }
+
+    doCalculations() {
+        print "Add: " + this.add();
+        print "Sub: " + this.sub();
+        print "Mul: " + this.mul();
+        print "Div: " + this.div();
+        print "Pow: " + this.pow();
+    }
+}
+
+var calc = Calculator(5, 3);
+calc.doCalculations();
