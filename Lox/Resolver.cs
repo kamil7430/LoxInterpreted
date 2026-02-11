@@ -62,8 +62,9 @@ public class Resolver : Expressions.IVisitor<None?>, Statements.IVisitor<None?>
 
     public None? Visit(Variable variable)
     {
-        if (_scopes.Count > 0 && _scopes.Peek()[variable.Name.Lexeme] == false)
-            Program.Error(variable.Name, "Can't read local variable in its own initializer.");
+        if (_scopes.Count > 0 && _scopes.Peek().TryGetValue(variable.Name.Lexeme, out var initialized))
+            if (!initialized)
+                Program.Error(variable.Name, "Can't read local variable in its own initializer.");
         
         ResolveLocal(variable, variable.Name);
         return null;
