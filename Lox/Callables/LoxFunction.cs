@@ -33,6 +33,13 @@ public class LoxFunction : ILoxCallable
         return null;
     }
 
+    public LoxFunction Bind(LoxInstance instance)
+    {
+        var environment = new Environment(_closure);
+        environment.Define("this", instance);
+        return new LoxFunction(_declaration, environment);
+    }
+
     public override string ToString()
         => _declaration switch
         {

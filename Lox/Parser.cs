@@ -37,7 +37,7 @@ term           → factor ( ( "-" | "+" ) factor )* ;
 factor         → unary ( ( "/" | "*" ) unary )* ;
 unary          → ( "!" | "-" ) unary | call ;
 call           → primary ( "(" arguments? ")" | "." IDENTIFIER )* ;
-primary        → NUMBER | STRING | "true" | "false" | "nil"
+primary        → NUMBER | STRING | "this" | "true" | "false" | "nil"
                | "(" expression ")" | IDENTIFIER | lambda ;
 lambda         → "fun" "(" parameters? ")" block ;
 
@@ -418,7 +418,7 @@ public class Parser
         return expr;
     }
 
-    // primary → NUMBER | STRING | "true" | "false" | "nil" | "(" expression ")" | IDENTIFIER | lambda ;
+    // primary → NUMBER | STRING | "this" | "true" | "false" | "nil" | "(" expression ")" | IDENTIFIER | lambda ;
     private Expr Primary()
     {
         if (Match(TokenType.True))
@@ -429,6 +429,8 @@ public class Parser
             return new Literal(null);
         if (Match(TokenType.Number, TokenType.String))
             return new Literal(Previous().Literal);
+        if (Match(TokenType.This))
+            return new This(Previous());
         if (Match(TokenType.LeftParen))
         {
             var expr = Expression();

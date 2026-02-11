@@ -138,6 +138,12 @@ public class Resolver : Expressions.IVisitor<None?>, Statements.IVisitor<None?>
         return null;
     }
 
+    public None? Visit(This @this)
+    {
+        ResolveLocal(@this, @this.Keyword);
+        return null;
+    }
+
     public None? Visit(Expression expression)
     {
         Resolve(expression.Expr);
@@ -253,11 +259,16 @@ public class Resolver : Expressions.IVisitor<None?>, Statements.IVisitor<None?>
         Declare(@class.Name);
         Define(@class.Name);
 
+        BeginScope();
+        _scopes.Peek()["this"] = new VariableDetails(null, true, true);
+        
         foreach (var method in @class.Methods)
         {
             var declaration = FunctionType.Method;
             ResolveFunctionlike(method, declaration);
         }
+        
+        EndScope();
 
         return null;
     }

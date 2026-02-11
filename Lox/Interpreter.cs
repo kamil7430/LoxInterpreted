@@ -201,6 +201,9 @@ public class Interpreter : Expressions.IVisitor<object?>, Statements.IVisitor<No
         return value;
     }
 
+    public object? Visit(This @this)
+        => LookUpVariable(@this.Keyword, @this);
+
     public None? Visit(Expression expression)
     {
         var value = Evaluate(expression.Expr);
