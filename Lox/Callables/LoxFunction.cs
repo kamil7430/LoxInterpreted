@@ -19,7 +19,14 @@ public class LoxFunction : ILoxCallable
         var environment = new Environment(interpreter.Globals);
         for (int i = 0; i < _declaration.Params.Count; i++)
             environment.Define(_declaration.Params[i].Lexeme, arguments[i]);
-        interpreter.ExecuteBlock(_declaration.Body, environment);
+        try
+        {
+            interpreter.ExecuteBlock(_declaration.Body, environment);
+        }
+        catch (ReturnExecutedException e)
+        {
+            return e.Value;
+        }
         return null;
     }
 

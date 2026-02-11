@@ -237,6 +237,14 @@ public class Interpreter : Expressions.IVisitor<object?>, Statements.IVisitor<No
         return null;
     }
 
+    public None? Visit(Return @return)
+    {
+        object? value = null;
+        if (@return.Value != null)
+            value = Evaluate(@return.Value);
+        throw new ReturnExecutedException(value);
+    }
+
     public void ExecuteBlock(List<Stmt> statements, Environment environment)
     {
         var previous = _environment;

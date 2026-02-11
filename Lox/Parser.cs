@@ -6,8 +6,8 @@ namespace Lox;
 /*
 program        → declaration* EOF ;
 declaration    → funDecl | varDecl | statement ;
-statement      → exprStmt | forStmt | ifStmt | printStmt | whileStmt | 
-               | breakStmt | block ;
+statement      → exprStmt | forStmt | ifStmt | printStmt | returnStmt
+               | whileStmt | breakStmt | block ;
 
 funDecl        → "fun" function ;
 function       → IDENTIFIER "(" parameters? ")" block ;
@@ -17,6 +17,7 @@ forStmt        → "for" "(" ( varDecl | exprStmt | ";" ) expression? ";"
                expression? ")" statement ;
 ifStmt         → "if" "(" expression ")" statement ( "else" statement )? ;
 printStmt      → "print" expression ";" ;
+returnStmt     → "return" expression? ";" ;
 whileStmt      → "while" "(" expression ")" statement ;
 breakStmt      → "break" ";" ;
 block          → "{" declaration* "}" ;
@@ -119,7 +120,7 @@ public class Parser
         return new Var(name, initializer);
     }
 
-    // statement → exprStmt | forStmt | ifStmt | printStmt | whileStmt | breakStmt | block ;
+    // statement → exprStmt | forStmt | ifStmt | printStmt | returnStmt | whileStmt | breakStmt | block ;
     private Stmt Statement()
     {
         if (Match(TokenType.For))
@@ -128,6 +129,8 @@ public class Parser
             return IfStatement();
         if (Match(TokenType.Print))
             return PrintStatement();
+        if (Match(TokenType.Return))
+            return ReturnStatement();
         if (Match(TokenType.While))
             return WhileStatement();
         if (Match(TokenType.Break))
@@ -211,6 +214,17 @@ public class Parser
         var value = Expression();
         Consume(TokenType.Semicolon, "Expected ';' after value!");
         return new Print(value);
+    }
+
+    // returnStmt → "return" expression? ";" ;
+    private Stmt ReturnStatement()
+    {
+        var keyword = Previous();
+        Expr? value = null;
+        if (!Check(TokenType.Semicolon))
+            value = Expression();
+        Consume(TokenType.Semicolon, "Expected ';' after return value.");
+        return new Return(keyword, value);
     }
 
     // whileStmt → "while" "(" expression ")" statement ;
