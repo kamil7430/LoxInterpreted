@@ -5,6 +5,6 @@ var a = "global";
   }
 
   showA();
-  var a = "block";
+  /*var*/ a = "block";
   showA();
 }

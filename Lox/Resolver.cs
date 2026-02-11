@@ -11,9 +11,16 @@ public class Resolver : Expressions.IVisitor<None?>, Statements.IVisitor<None?>
         Function,
         Lambda,
     }
-    
+
+    private class VariableDetails(Token name, bool initialized, bool used)
+    {
+        public Token Name { get; set; } = name;
+        public bool Initialized { get; set; } = initialized;
+        public bool Used { get; set; } = used;
+    }
+
     private readonly Interpreter _interpreter;
-    private readonly Stack<Dictionary<string, bool>> _scopes = new();
+    private readonly Stack<Dictionary<string, VariableDetails>> _scopes = new();
     private FunctionType _currentFunction = FunctionType.None;
 
     public Resolver(Interpreter interpreter)
@@ -62,8 +69,8 @@ public class Resolver : Expressions.IVisitor<None?>, Statements.IVisitor<None?>
 
     public None? Visit(Variable variable)
     {
-        if (_scopes.Count > 0 && _scopes.Peek().TryGetValue(variable.Name.Lexeme, out var initialized))
-            if (!initialized)
+        if (_scopes.Count > 0 && _scopes.Peek().TryGetValue(variable.Name.Lexeme, out var details))
+            if (!details.Initialized)
                 Program.Error(variable.Name, "Can't read local variable in its own initializer.");
         
         ResolveLocal(variable, variable.Name);
@@ -72,16 +79,17 @@ public class Resolver : Expressions.IVisitor<None?>, Statements.IVisitor<None?>
 
     private void ResolveLocal(Expr expr, Token name)
     {
-        Stack<Dictionary<string, bool>> tmp = new();
+        Stack<Dictionary<string, VariableDetails>> tmp = new();
         int i = -1;
         while (_scopes.Count > 0)
         {
             i++;
             var current = _scopes.Pop();
             tmp.Push(current);
-            if (current.ContainsKey(name.Lexeme))
+            if (current.TryGetValue(name.Lexeme, out var details))
             {
                 _interpreter.Resolve(expr, i);
+                details.Used = true;
                 break;
             }
         }
@@ -141,7 +149,7 @@ public class Resolver : Expressions.IVisitor<None?>, Statements.IVisitor<None?>
     {
         if (_scopes.Count <= 0)
             return;
-        if (!_scopes.Peek().TryAdd(name.Lexeme, false))
+        if (!_scopes.Peek().TryAdd(name.Lexeme, new VariableDetails(name, false, false)))
             Program.Error(name, "A variable with this name is already in this scope.");
     }
 
@@ -149,7 +157,7 @@ public class Resolver : Expressions.IVisitor<None?>, Statements.IVisitor<None?>
     {
         if (_scopes.Count <= 0)
             return;
-        _scopes.Peek()[name.Lexeme] = true;
+        _scopes.Peek()[name.Lexeme].Initialized = true;
     }
 
     public None? Visit(Block block)
@@ -161,10 +169,15 @@ public class Resolver : Expressions.IVisitor<None?>, Statements.IVisitor<None?>
     }
 
     private void BeginScope()
-        => _scopes.Push(new Dictionary<string, bool>());
+        => _scopes.Push(new Dictionary<string, VariableDetails>());
 
     private void EndScope()
-        => _scopes.Pop();
+    {
+        var scope = _scopes.Pop();
+        foreach (var detail in scope.Values)
+            if (!detail.Used)
+                Program.Error(detail.Name, "Unused variable.");
+    }
 
     public None? Visit(If @if)
     {
