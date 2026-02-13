@@ -15,4 +15,5 @@ public interface IVisitor<out T>
     T Visit(Get get);
     T Visit(Set set);
     T Visit(This @this);
+    T Visit(Super super);
 }

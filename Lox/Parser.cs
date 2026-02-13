@@ -38,7 +38,8 @@ factor         → unary ( ( "/" | "*" ) unary )* ;
 unary          → ( "!" | "-" ) unary | call ;
 call           → primary ( "(" arguments? ")" | "." IDENTIFIER )* ;
 primary        → NUMBER | STRING | "this" | "true" | "false" | "nil"
-               | "(" expression ")" | IDENTIFIER | lambda ;
+               | "(" expression ")" | IDENTIFIER | "super" "." IDENTIFIER 
+               | lambda;
 lambda         → "fun" "(" parameters? ")" block ;
 
 parameters     → IDENTIFIER ( "," IDENTIFIER )* ;
@@ -437,7 +438,7 @@ public class Parser
         return expr;
     }
 
-    // primary → NUMBER | STRING | "this" | "true" | "false" | "nil" | "(" expression ")" | IDENTIFIER | lambda ;
+    // primary → NUMBER | STRING | "this" | "true" | "false" | "nil" | "(" expression ")" | IDENTIFIER | "super" "." IDENTIFIER | lambda ;
     private Expr Primary()
     {
         if (Match(TokenType.True))
@@ -458,6 +459,13 @@ public class Parser
         }
         if (Match(TokenType.Identifier))
             return new Variable(Previous());
+        if (Match(TokenType.Super))
+        {
+            var keyword = Previous();
+            Consume(TokenType.Dot, "Expected '.' after 'super'.");
+            var method = Consume(TokenType.Identifier, "Expected superclass method name.");
+            return new Super(keyword, method);
+        }
         if (Match(TokenType.Fun))
             return Lambda();
 

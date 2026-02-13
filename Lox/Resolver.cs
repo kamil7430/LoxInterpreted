@@ -19,6 +19,7 @@ public class Resolver : Expressions.IVisitor<None?>, Statements.IVisitor<None?>
     {
         None,
         Class,
+        Subclass,
     }
 
     private class VariableDetails(Token name, bool initialized, bool used)
@@ -158,6 +159,22 @@ public class Resolver : Expressions.IVisitor<None?>, Statements.IVisitor<None?>
         return null;
     }
 
+    public None? Visit(Super super)
+    {
+        switch (_currentClass)
+        {
+            case ClassType.None:
+                Program.Error(super.Keyword, "Can't use 'super' outside of a class.");
+                break;
+            case ClassType.Class:
+                Program.Error(super.Keyword, "Can't use 'super' in a class with no superclass.");
+                break;
+        }
+        
+        ResolveLocal(super, super.Keyword);
+        return null;
+    }
+
     public None? Visit(Expression expression)
     {
         Resolve(expression.Expr);
@@ -283,9 +300,14 @@ public class Resolver : Expressions.IVisitor<None?>, Statements.IVisitor<None?>
 
         if (@class.Superclass != null)
         {
+            _currentClass = ClassType.Subclass;
+            
             if (@class.Superclass.Name.Lexeme.Equals(@class.Name.Lexeme))
                 Program.Error(@class.Superclass.Name, "A class can't inherit from itself.");
             Resolve(@class.Superclass);
+            
+            BeginScope();
+            _scopes.Peek()["super"] = new VariableDetails(null, true, true);
         }
 
         BeginScope();
@@ -308,6 +330,9 @@ public class Resolver : Expressions.IVisitor<None?>, Statements.IVisitor<None?>
         }
         
         EndScope();
+        
+        if (@class.Superclass != null)
+            EndScope();
 
         _currentClass = enclosingClass;
         return null;

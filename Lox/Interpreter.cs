@@ -211,6 +211,17 @@ public class Interpreter : Expressions.IVisitor<object?>, Statements.IVisitor<No
     public object? Visit(This @this)
         => LookUpVariable(@this.Keyword, @this);
 
+    public object? Visit(Super super)
+    {
+        var distance = _locals[super];
+        var superclass = (LoxClass)_environment.GetAt(distance, "super")!;
+        var instance = (LoxInstance)_environment.GetAt(distance - 1, "this")!;
+
+        var method = superclass.FindMethod(super.Method.Lexeme);
+        return method?.Bind(instance) ?? 
+            throw new RuntimeErrorException(super.Method, $"Undefined property {super.Method.Lexeme}.");
+    }
+
     public None? Visit(Expression expression)
     {
         var value = Evaluate(expression.Expr);
@@ -289,6 +300,12 @@ public class Interpreter : Expressions.IVisitor<object?>, Statements.IVisitor<No
         
         _environment.Define(@class.Name.Lexeme, null);
 
+        if (superclass != null)
+        {
+            _environment = new Environment(_environment);
+            _environment.Define("super", superclass);
+        }
+
         Dictionary<string, LoxFunction> methods = [];
         foreach (var method in @class.Methods)
         {
@@ -312,6 +329,10 @@ public class Interpreter : Expressions.IVisitor<object?>, Statements.IVisitor<No
         }
         
         var klass = new LoxClass(@class.Name.Lexeme, superclass, methods, staticMethods);
+
+        if (superclass != null)
+            _environment = _environment.Enclosing!;
+        
         _environment.Assign(@class.Name, klass);
         return null;
     }
