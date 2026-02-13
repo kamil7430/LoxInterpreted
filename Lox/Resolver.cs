@@ -12,6 +12,7 @@ public class Resolver : Expressions.IVisitor<None?>, Statements.IVisitor<None?>
         Lambda,
         Method,
         Initializer,
+        StaticMethod,
     }
 
     private enum ClassType
@@ -150,6 +151,8 @@ public class Resolver : Expressions.IVisitor<None?>, Statements.IVisitor<None?>
     {
         if (_currentClass == ClassType.None)
             Program.Error(@this.Keyword, "Can't use 'this' outside of a class.");
+        else if (_currentFunction == FunctionType.StaticMethod)
+            Program.Error(@this.Keyword, "Can't use 'this' inside a static method.");
         else
             ResolveLocal(@this, @this.Keyword);
         return null;
@@ -279,6 +282,14 @@ public class Resolver : Expressions.IVisitor<None?>, Statements.IVisitor<None?>
         Define(@class.Name);
 
         BeginScope();
+
+        foreach (var staticMethod in @class.StaticMethods)
+        {
+            if (staticMethod.Name.Lexeme.Equals("init"))
+                Program.Error(staticMethod.Name, "Initializer can't be static!");
+            ResolveFunctionlike(staticMethod, FunctionType.StaticMethod);
+        }
+        
         _scopes.Peek()["this"] = new VariableDetails(null, true, true);
         
         foreach (var method in @class.Methods)

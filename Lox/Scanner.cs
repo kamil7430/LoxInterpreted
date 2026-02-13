@@ -21,6 +21,7 @@ public class Scanner
         { "var", TokenType.Var },
         { "while", TokenType.While },
         { "break", TokenType.Break },
+        { "static", TokenType.Static },
     };
     
     private readonly string _source;

@@ -11,7 +11,7 @@ declaration    → classDecl | funDecl | varDecl | statement ;
 statement      → exprStmt | forStmt | ifStmt | printStmt | returnStmt
                | whileStmt | breakStmt | block ;
 
-classDecl      → "class" IDENTIFIER "{" function* "}" ;
+classDecl      → "class" IDENTIFIER "{" ( "static"? function )* "}" ;
 funDecl        → "fun" function ;
 function       → IDENTIFIER "(" parameters? ")" block ;
 varDecl        → "var" IDENTIFIER ( "=" expression )? ";" ;
@@ -88,18 +88,24 @@ public class Parser
         }
     }
 
-    // classDecl → "class" IDENTIFIER "{" function* "}" ;
+    // classDecl → "class" IDENTIFIER "{" ( "static"? function )* "}" ;
     private Stmt ClassDeclaration()
     {
         var name = Consume(TokenType.Identifier, "Expected class name.");
         Consume(TokenType.LeftBrace, "Expected '{' before class body.");
 
         List<Function> methods = [];
+        List<Function> staticMethods = [];
         while (!Check(TokenType.RightBrace) && !IsAtEnd())
-            methods.Add(Function("method"));
+        {
+            if (Match(TokenType.Static))
+                staticMethods.Add(Function("static method"));
+            else
+                methods.Add(Function("method"));
+        }
 
         Consume(TokenType.RightBrace, "Expected '}' after class body.");
-        return new Class(name, methods);
+        return new Class(name, methods, staticMethods);
     }
 
     // funDecl    → "fun" function ;
