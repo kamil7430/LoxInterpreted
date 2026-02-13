@@ -337,4 +337,11 @@ public class Resolver : Expressions.IVisitor<None?>, Statements.IVisitor<None?>
         _currentClass = enclosingClass;
         return null;
     }
+
+    public None? Visit(Panic panic)
+    {
+        if (panic.Value != null)
+            Resolve(panic.Value);
+        return null;
+    }
 }

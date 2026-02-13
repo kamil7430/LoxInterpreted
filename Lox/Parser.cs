@@ -7,7 +7,7 @@ namespace Lox;
 program        → declaration* EOF ;
 declaration    → classDecl | funDecl | varDecl | statement ;
 statement      → exprStmt | forStmt | ifStmt | printStmt | returnStmt
-               | whileStmt | breakStmt | block ;
+               | panicStmt | whileStmt | breakStmt | block ;
 
 classDecl      → "class" IDENTIFIER ( "<" IDENTIFIER )?
                "{" ( "static"? ( function | getter ) )* "}" ;
@@ -21,6 +21,7 @@ forStmt        → "for" "(" ( varDecl | exprStmt | ";" ) expression? ";"
 ifStmt         → "if" "(" expression ")" statement ( "else" statement )? ;
 printStmt      → "print" expression ";" ;
 returnStmt     → "return" expression? ";" ;
+panicStmt      → "panic" expression? ";" ;
 whileStmt      → "while" "(" expression ")" statement ;
 breakStmt      → "break" ";" ;
 block          → "{" declaration* "}" ;
@@ -160,7 +161,7 @@ public class Parser
         return new Var(name, initializer);
     }
 
-    // statement → exprStmt | forStmt | ifStmt | printStmt | returnStmt | whileStmt | breakStmt | block ;
+    // statement → exprStmt | forStmt | ifStmt | printStmt | returnStmt | panicStmt | whileStmt | breakStmt | block ;
     private Stmt Statement()
     {
         if (Match(TokenType.For))
@@ -171,6 +172,8 @@ public class Parser
             return PrintStatement();
         if (Match(TokenType.Return))
             return ReturnStatement();
+        if (Match(TokenType.Panic))
+            return PanicStatement();
         if (Match(TokenType.While))
             return WhileStatement();
         if (Match(TokenType.Break))
@@ -265,6 +268,17 @@ public class Parser
             value = Expression();
         Consume(TokenType.Semicolon, "Expected ';' after return value.");
         return new Return(keyword, value);
+    }
+    
+    // panicStmt → "panic" expression? ";" ;
+    private Stmt PanicStatement()
+    {
+        var keyword = Previous();
+        Expr? value = null;
+        if (!Check(TokenType.Semicolon))
+            value = Expression();
+        Consume(TokenType.Semicolon, "Expected ';' after panic.");
+        return new Panic(keyword, value);
     }
 
     // whileStmt → "while" "(" expression ")" statement ;

@@ -22,6 +22,7 @@ public class Scanner
         { "while", TokenType.While },
         { "break", TokenType.Break },
         { "static", TokenType.Static },
+        { "panic", TokenType.Panic },
     };
     
     private readonly string _source;

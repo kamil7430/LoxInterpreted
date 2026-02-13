@@ -32,6 +32,10 @@ public class Interpreter : Expressions.IVisitor<object?>, Statements.IVisitor<No
         {
             Program.RuntimeError(e);
         }
+        catch (PanicExecutedException e)
+        {
+            Program.Error(e.Keyword, $"Script panicked (panic value: {Stringify(e.Value)})!");
+        }
     }
 
     private void Execute(Stmt stmt)
@@ -335,6 +339,14 @@ public class Interpreter : Expressions.IVisitor<object?>, Statements.IVisitor<No
         
         _environment.Assign(@class.Name, klass);
         return null;
+    }
+
+    public None? Visit(Panic panic)
+    {
+        object? value = null;
+        if (panic.Value != null)
+            value = Evaluate(panic.Value);
+        throw new PanicExecutedException(panic.Keyword, value);
     }
 
     public void ExecuteBlock(List<Stmt> statements, Environment environment)

@@ -12,4 +12,5 @@ public interface IVisitor<out T>
     T Visit(Function function);
     T Visit(Return @return);
     T Visit(Class @class);
+    T Visit(Panic panic);
 }
