@@ -11,9 +11,10 @@ declaration    → classDecl | funDecl | varDecl | statement ;
 statement      → exprStmt | forStmt | ifStmt | printStmt | returnStmt
                | whileStmt | breakStmt | block ;
 
-classDecl      → "class" IDENTIFIER "{" ( "static"? function )* "}" ;
+classDecl      → "class" IDENTIFIER "{" ( "static"? ( function | getter ) )* "}" ;
 funDecl        → "fun" function ;
 function       → IDENTIFIER "(" parameters? ")" block ;
+getter         → IDENTIFIER block ;
 varDecl        → "var" IDENTIFIER ( "=" expression )? ";" ;
 exprStmt       → expression ";" ;
 forStmt        → "for" "(" ( varDecl | exprStmt | ";" ) expression? ";" 
@@ -88,7 +89,7 @@ public class Parser
         }
     }
 
-    // classDecl → "class" IDENTIFIER "{" ( "static"? function )* "}" ;
+    // classDecl → "class" IDENTIFIER "{" ( "static"? ( function | getter ) )* "}" ;
     private Stmt ClassDeclaration()
     {
         var name = Consume(TokenType.Identifier, "Expected class name.");
@@ -99,9 +100,9 @@ public class Parser
         while (!Check(TokenType.RightBrace) && !IsAtEnd())
         {
             if (Match(TokenType.Static))
-                staticMethods.Add(Function("static method"));
+                staticMethods.Add(Function("static method", true));
             else
-                methods.Add(Function("method"));
+                methods.Add(Function("method", true));
         }
 
         Consume(TokenType.RightBrace, "Expected '}' after class body.");
@@ -110,10 +111,15 @@ public class Parser
 
     // funDecl    → "fun" function ;
     // function   → IDENTIFIER "(" parameters? ")" block ;
+    // getter     → IDENTIFIER block ;
     // parameters → IDENTIFIER ( "," IDENTIFIER )* ;
-    private Function Function(string kind)
+    private Function Function(string kind, bool allowGetter = false)
     {
         var name = Consume(TokenType.Identifier, $"Expected {kind} name.");
+
+        if (allowGetter && Match(TokenType.LeftBrace))
+            return new Getter(name, Block());
+        
         Consume(TokenType.LeftParen, $"Expected '(' after {kind} name.");
         
         List<Token> parameters = [];
@@ -132,7 +138,7 @@ public class Parser
         var body = Block();
         return new Function(name, parameters, body);
     }
-    
+
     // varDecl → "var" IDENTIFIER ( "=" expression )? ";" ;
     private Stmt VarDeclaration()
     {

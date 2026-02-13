@@ -5,8 +5,8 @@ namespace Lox.Callables;
 
 public class LoxFunction : ILoxCallable
 {
-    private readonly IFunctionlike _declaration;
-    private readonly Environment _closure;
+    protected readonly IFunctionlike _declaration;
+    protected readonly Environment _closure;
     private readonly bool _isInitializer;
 
     public int Arity
@@ -39,7 +39,7 @@ public class LoxFunction : ILoxCallable
         return null;
     }
 
-    public LoxFunction Bind(LoxInstance instance)
+    public virtual LoxFunction Bind(LoxInstance instance)
     {
         var environment = new Environment(_closure);
         environment.Define("this", instance);

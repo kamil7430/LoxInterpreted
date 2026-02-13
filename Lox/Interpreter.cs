@@ -186,12 +186,18 @@ public class Interpreter : Expressions.IVisitor<object?>, Statements.IVisitor<No
         => new LoxFunction(lambda, _environment, false);
 
     public object? Visit(Get get)
-        => Evaluate(get.Object) switch
+    {
+        var obj = Evaluate(get.Object) switch
         {
             LoxInstance i => i.Get(get.Name),
             LoxClass c => c.FindStaticMethod(get.Name),
             _ => throw new RuntimeErrorException(get.Name, "Only instances have properties."),
         };
+        
+        if (obj is LoxGetter getter)
+            return getter.Call(this, []);
+        return obj;
+    }
 
     public object? Visit(Set set)
     {
@@ -281,14 +287,22 @@ public class Interpreter : Expressions.IVisitor<object?>, Statements.IVisitor<No
         Dictionary<string, LoxFunction> methods = [];
         foreach (var method in @class.Methods)
         {
-            var function = new LoxFunction(method, _environment, method.Name.Lexeme.Equals("init"));
+            LoxFunction function;
+            if (method is Getter getter)
+                function = new LoxGetter(getter, _environment);
+            else
+                function = new LoxFunction(method, _environment, method.Name.Lexeme.Equals("init"));
             methods.Add(method.Name.Lexeme, function);
         }
 
         Dictionary<string, LoxFunction> staticMethods = [];
         foreach (var staticMethod in @class.StaticMethods)
         {
-            var function = new LoxFunction(staticMethod, _environment, false);
+            LoxFunction function;
+            if (staticMethod is Getter getter)
+                function = new LoxGetter(getter, _environment);
+            else
+                function = new LoxFunction(staticMethod, _environment, false);
             staticMethods.Add(staticMethod.Name.Lexeme, function);
         }
         
