@@ -23,7 +23,7 @@ class List {
 
     pop() {
         if (this.head == nil) {
-            return nil;
+            panic "List is empty!";
         }
         var node = this.head;
         this.head = this.head.next;
@@ -41,6 +41,7 @@ class List {
 }
 
 var list = List();
+//list.pop();
 list.push(12);
 list.push(nil);
 list.push("Bacon");
