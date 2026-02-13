@@ -1,7 +1,5 @@
-﻿using System.Linq.Expressions;
-using Lox.Expressions;
+﻿using Lox.Expressions;
 using Lox.Statements;
-using Expression = Lox.Statements.Expression;
 
 namespace Lox;
 
