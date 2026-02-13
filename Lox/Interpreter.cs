@@ -282,6 +282,11 @@ public class Interpreter : Expressions.IVisitor<object?>, Statements.IVisitor<No
 
     public None? Visit(Class @class)
     {
+        LoxClass? superclass = null;
+        if (@class.Superclass != null)
+            superclass = Evaluate(@class.Superclass) as LoxClass ??
+                throw new RuntimeErrorException(@class.Superclass.Name, "Superclass must be a class.");
+        
         _environment.Define(@class.Name.Lexeme, null);
 
         Dictionary<string, LoxFunction> methods = [];
@@ -306,7 +311,7 @@ public class Interpreter : Expressions.IVisitor<object?>, Statements.IVisitor<No
             staticMethods.Add(staticMethod.Name.Lexeme, function);
         }
         
-        var klass = new LoxClass(@class.Name.Lexeme, methods, staticMethods);
+        var klass = new LoxClass(@class.Name.Lexeme, superclass, methods, staticMethods);
         _environment.Assign(@class.Name, klass);
         return null;
     }

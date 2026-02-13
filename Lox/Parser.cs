@@ -9,7 +9,8 @@ declaration    → classDecl | funDecl | varDecl | statement ;
 statement      → exprStmt | forStmt | ifStmt | printStmt | returnStmt
                | whileStmt | breakStmt | block ;
 
-classDecl      → "class" IDENTIFIER "{" ( "static"? ( function | getter ) )* "}" ;
+classDecl      → "class" IDENTIFIER ( "<" IDENTIFIER )?
+               "{" ( "static"? ( function | getter ) )* "}" ;
 funDecl        → "fun" function ;
 function       → IDENTIFIER "(" parameters? ")" block ;
 getter         → IDENTIFIER block ;
@@ -87,10 +88,18 @@ public class Parser
         }
     }
 
-    // classDecl → "class" IDENTIFIER "{" ( "static"? ( function | getter ) )* "}" ;
+    // classDecl → "class" IDENTIFIER ( "<" IDENTIFIER )? "{" ( "static"? ( function | getter ) )* "}" ;
     private Stmt ClassDeclaration()
     {
         var name = Consume(TokenType.Identifier, "Expected class name.");
+
+        Variable? superclass = null;
+        if (Match(TokenType.Less))
+        {
+            Consume(TokenType.Identifier, "Expected superclass name.");
+            superclass = new Variable(Previous());
+        }
+        
         Consume(TokenType.LeftBrace, "Expected '{' before class body.");
 
         List<Function> methods = [];
@@ -104,7 +113,7 @@ public class Parser
         }
 
         Consume(TokenType.RightBrace, "Expected '}' after class body.");
-        return new Class(name, methods, staticMethods);
+        return new Class(name, superclass, methods, staticMethods);
     }
 
     // funDecl    → "fun" function ;

@@ -5,14 +5,16 @@ public class LoxClass : ILoxCallable
     private readonly Dictionary<string, LoxFunction> _methods;
     private readonly Dictionary<string, LoxFunction> _staticMethods;
     
-    public LoxClass(string name, Dictionary<string, LoxFunction> methods, Dictionary<string, LoxFunction> staticMethods)
+    public LoxClass(string name, LoxClass? superclass, Dictionary<string, LoxFunction> methods, Dictionary<string, LoxFunction> staticMethods)
     {
         Name = name;
+        Superclass = superclass;
         _methods = methods;
         _staticMethods = staticMethods;
     }
 
     public string Name { get; }
+    public LoxClass? Superclass { get; }
 
     public int Arity
         => FindMethod("init")?.Arity ?? 0;
@@ -26,16 +28,16 @@ public class LoxClass : ILoxCallable
     }
 
     public LoxFunction? FindMethod(string name)
-        => _methods.GetValueOrDefault(name) ?? _staticMethods.GetValueOrDefault(name);
+        => _methods.GetValueOrDefault(name) ?? _staticMethods.GetValueOrDefault(name) ?? Superclass?.FindMethod(name);
 
     public LoxFunction? FindStaticMethod(Token name)
     {
         var staticMethod = _staticMethods.GetValueOrDefault(name.Lexeme);
         if (staticMethod != null)
             return staticMethod;
-        if (FindMethod(name.Lexeme) != null)
+        if (_methods.GetValueOrDefault(name.Lexeme) != null)
             throw new RuntimeErrorException(name, "Can't access non-static methods from static context.");
-        return null;
+        return Superclass?.FindStaticMethod(name);
     }
 
     public override string ToString()

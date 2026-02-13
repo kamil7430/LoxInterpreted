@@ -281,6 +281,13 @@ public class Resolver : Expressions.IVisitor<None?>, Statements.IVisitor<None?>
         Declare(@class.Name);
         Define(@class.Name);
 
+        if (@class.Superclass != null)
+        {
+            if (@class.Superclass.Name.Lexeme.Equals(@class.Name.Lexeme))
+                Program.Error(@class.Superclass.Name, "A class can't inherit from itself.");
+            Resolve(@class.Superclass);
+        }
+
         BeginScope();
 
         foreach (var staticMethod in @class.StaticMethods)
